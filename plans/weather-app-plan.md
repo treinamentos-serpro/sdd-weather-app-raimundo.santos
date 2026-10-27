@@ -57,40 +57,40 @@ Responsabilidades seguem a convenção do projeto: UI em `components/`, dados em
 Contratos de domínio propostos; não são a estrutura bruta da API.
 
 ```ts
-export type TemperatureUnit = 'celsius' | 'fahrenheit';
+export type Unit = 'celsius' | 'fahrenheit';
 
 export interface City {
-  id: string;
-  name: string;
-  admin1?: string;
-  country?: string;
-  countryCode?: string;
-  latitude: number;
-  longitude: number;
-  timeZone?: string;
+  id: string; // ID do resultado do provedor ou chave geográfica estável
+  name: string; // Nome retornado pelo geocoding
+  latitude: number; // Latitude usada na consulta meteorológica
+  longitude: number; // Longitude usada na consulta meteorológica
+  admin1?: string; // Região administrativa, quando disponível
+  country?: string; // País, quando disponível
+  countryCode?: string; // Código ISO do país, quando disponível
+  timeZone?: string; // Fuso retornado pelo geocoding, quando disponível
 }
 
 export interface WeatherCondition {
-  code: number;
-  labelPtBr: string;
+  code: number; // weather_code Open-Meteo (código WMO)
+  labelPtBr: string; // Descrição localizada para a interface
 }
 
 export interface CurrentWeather {
-  temperatureCelsius: number | null;
-  condition: WeatherCondition | null;
+  temperatureCelsius: number | null; // current.temperature_2m normalizada para °C
+  condition: WeatherCondition | null; // current.weather_code mapeado para pt-BR
 }
 
 export interface ForecastDay {
-  localDate: string; // YYYY-MM-DD no fuso da cidade
-  temperatureCelsius: number | null;
-  condition: WeatherCondition | null;
+  localDate: string; // daily.time no fuso da cidade, formato YYYY-MM-DD
+  temperatureCelsius: number | null; // Campo daily de temperatura ainda depende da spec
+  condition: WeatherCondition | null; // daily.weather_code mapeado para pt-BR
 }
 
 export interface WeatherData {
-  city: City;
-  timeZone: string | null;
-  current: CurrentWeather;
-  days: ForecastDay[]; // cinco posições, mesmo quando algum campo está indisponível
+  city: City; // Local selecionado pelo usuário
+  timeZone: string | null; // timezone da resposta meteorológica
+  current: CurrentWeather; // Condições atuais retornadas pela API
+  days: ForecastDay[]; // Cinco datas locais; campos ausentes usam null
 }
 
 export type RequestErrorKind = 'network' | 'http' | 'timeout' | 'invalid-response';
@@ -107,7 +107,7 @@ export type AsyncState<T> =
   | { status: 'error'; error: RequestError };
 ```
 
-`City.id` deve identificar unicamente o resultado selecionável; usar o identificador do provedor quando disponível e uma chave estável baseada na identidade geográfica quando não estiver. Campos opcionais não devem ser inventados. `WeatherData.days` contém as cinco datas locais esperadas; valores ausentes são `null` conforme AC-10. A decisão sobre qual estatística de temperatura diária usar (máxima, mínima ou média) está bloqueada pela spec e deve ser resolvida antes de fechar o contrato da API (AC-07, Open Question 2 e 6).
+`City.id` deve identificar unicamente o resultado selecionável; usar o identificador do provedor quando disponível e uma chave estável baseada na identidade geográfica quando não estiver. Campos opcionais não devem ser inventados. `WeatherData.days` contém as cinco datas locais esperadas; valores ausentes são `null` conforme AC-10. A decisão sobre qual estatística diária da Open-Meteo alimentar `ForecastDay.temperatureCelsius` (máxima, mínima ou média) permanece pendente e precisa ser resolvida antes de fechar o contrato da API (AC-07, Open Questions 2 e 6).
 
 ## Data Flow
 
@@ -140,7 +140,7 @@ Manter estado local no hook `useWeatherApp`; sem Redux, Context global ou cache.
 | Busca | `AsyncState<City[]>` | `empty` representa resposta bem-sucedida sem resultados |
 | Cidade selecionada | `City | null` | Só muda após seleção explícita |
 | Clima | `AsyncState<WeatherData>` | Limpar ao selecionar cidade diferente |
-| Unidade | `TemperatureUnit` | Inicial `celsius`; permanece na página atual |
+| Unidade | `Unit` | Inicial `celsius`; permanece na página atual |
 
 Busca e clima têm estados independentes. Retry é ação explícita e repete os mesmos parâmetros. Não guardar termo, cidade ou unidade em localStorage/servidor (AC-04, AC-11, AC-13; NFR-05).
 
