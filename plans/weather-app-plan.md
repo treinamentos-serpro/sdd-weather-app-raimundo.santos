@@ -140,6 +140,30 @@ export type WeatherState = AsyncState<WeatherData>;
 6. A UI apresenta temperaturas convertidas pela unidade em estado. A troca de unidade não refaz a consulta; a preferência dura até fechar ou recarregar a página (AC-11/12).
 7. Mensagens e rótulos de condição são apresentados em pt-BR (AC-06/07/14).
 
+```mermaid
+flowchart TD
+  A[Input de busca] --> B[Hook: submitSearch]
+  B --> C[Service de geocoding]
+  C --> D{Resultado da busca}
+  D -->|Resultados| E[Hook: search success]
+  E --> F[UI: resultados de cidades]
+  F -->|Usuário seleciona cidade| G[Hook: selectCity]
+  G --> H[Service de forecast]
+  H --> I{Resposta meteorológica}
+  I -->|Válida| J[Hook: weather success]
+  I -->|Parcial| K[Mapear campos ausentes para null]
+  K --> J
+  J --> L[Componentes: clima atual e previsão]
+  L --> M[Temperatura derivada pela unidade]
+  D -->|Sem resultados| N[Hook: search empty]
+  N --> O[UI: estado vazio]
+  C -->|Rede, API, HTTP ou timeout| P[Hook: search error]
+  H -->|Rede, API, HTTP, timeout ou payload inválido| Q[Hook: weather error]
+  P --> R[UI: erro e retry manual]
+  Q --> R
+  R --> B
+```
+
 ## External APIs
 
 Sem API key. Encapsular URLs e payloads exclusivamente em `openMeteoService.ts`.
