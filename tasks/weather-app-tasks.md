@@ -197,7 +197,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-21 — Testar conversão de temperatura
 
 - **Descrição:** validar conversão pura e arredondamento da temperatura exibida.
-- **Critérios de aceite:** asserts verificam `0 °C → 32 °F`, `100 °C → 212 °F`, valor negativo, `null`, empate positivo e negativo arredondados para longe de zero; a entrada permanece inalterada.
+- **Critérios de aceite:** asserts verificam `0 °C → 32 °F`, `100 °C → 212 °F`, valor negativo, `null`, empate positivo e negativo arredondados para longe de zero; a entrada permanece inalterada; o teste não instancia nem chama services.
 - **Rastreabilidade:** AC-11, AC-12.
 - **Dependências:** T-08.
 - **Arquivos prováveis:** `tests/unit/lib/temperature.test.ts`.
@@ -206,7 +206,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-22 — Testar serviço de geocoding
 
 - **Descrição:** testar geocoding com `fetch` mockado.
-- **Critérios de aceite:** mocks verificam URL/parâmetros exatos; asserts cobrem sucesso, lista vazia, rede, HTTP não-2xx, envelope API, timeout aos 10 s, cancelamento e JSON/schema inválido; `fetch` real não é chamado.
+- **Critérios de aceite:** `fetch` é mockado nesta tarefa; asserts verificam URL/parâmetros exatos e sucesso, lista vazia, rede, HTTP não-2xx, envelope API, timeout aos 10 s, cancelamento e JSON/schema inválido; nenhuma chamada de rede real ocorre.
 - **Rastreabilidade:** AC-01 a AC-04, AC-08, AC-09, AC-13.
 - **Dependências:** T-09.
 - **Arquivos prováveis:** `tests/unit/services/geocoding.test.ts`.
@@ -215,7 +215,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-23 — Testar serviço de forecast
 
 - **Descrição:** testar forecast com `fetch` mockado.
-- **Critérios de aceite:** mocks verificam coordenadas e parâmetros `current`/`daily`; asserts cobrem resposta de cinco dias, campos ausentes como `null`, erros HTTP/API/rede, timeout aos 10 s, cancelamento e timezone ausente; `fetch` real não é chamado.
+- **Critérios de aceite:** `fetch` é mockado nesta tarefa; asserts verificam coordenadas e parâmetros `current`/`daily`, resposta completa de cinco dias, campos ausentes como `null`, erros HTTP/API/rede, timeout aos 10 s, cancelamento e timezone ausente; nenhuma chamada de rede real ocorre.
 - **Rastreabilidade:** AC-05 a AC-10, AC-13, AC-15.
 - **Dependências:** T-10.
 - **Arquivos prováveis:** `tests/unit/services/forecast.test.ts`.
@@ -233,7 +233,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-25 — Testar componente de busca
 
 - **Descrição:** validar estados, submissão e seleção por interação do usuário.
-- **Critérios de aceite:** há assert de conteúdo/role para idle, loading, success, empty e error; input vazio não chama callback; seleção e retry chamam callback correto; navegação por teclado, foco visível e nome acessível são verificados.
+- **Critérios de aceite:** testes renderizam separadamente `idle`, `loading`, `success`, `empty` e `error`; cada estado tem conteúdo/role esperado; input vazio não chama callback; seleção e retry chamam callback correto; teclado, foco visível e nome acessível são verificados. `empty` é exclusivo da busca.
 - **Rastreabilidade:** AC-01 a AC-04, AC-08, AC-09, AC-13, AC-14, NFR-02.
 - **Dependências:** T-12.
 - **Arquivos prováveis:** `tests/unit/components/CitySearch.test.tsx`.
@@ -242,7 +242,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-26 — Testar componente de clima atual
 
 - **Descrição:** validar conteúdo, unidade e dados parciais no painel atual.
-- **Critérios de aceite:** casos verificam sucesso, loading, erro e temperatura/condição `null`; local, valor e unidade são iguais às props; loading/erro têm role acessível.
+- **Critérios de aceite:** testes renderizam separadamente `loading`, `success` e `error`; no sucesso, local, valor e unidade correspondem às props; temperatura/condição `null` mostram indisponibilidade; loading/erro têm role acessível. Não existe estado `empty` para clima.
 - **Rastreabilidade:** AC-05, AC-06, AC-08, AC-10, AC-14, NFR-02.
 - **Dependências:** T-13.
 - **Arquivos prováveis:** `tests/unit/components/CurrentWeather.test.tsx`.
@@ -251,7 +251,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-27 — Testar componente de previsão
 
 - **Descrição:** validar datas, valores e estados indisponíveis no painel de previsão.
-- **Critérios de aceite:** fixture verifica exatamente cinco datas na ordem/timezone fornecidos; `null` mostra indisponibilidade; unidade corresponde à prop; loading/erro têm role acessível e timezone inválido mostra estado indisponível.
+- **Critérios de aceite:** testes renderizam separadamente `loading`, `success` e `error`; fixture de sucesso verifica cinco datas ordenadas no timezone fornecido; `null` mostra indisponibilidade; unidade corresponde à prop; loading/erro têm role acessível e timezone inválido mostra estado indisponível. Não existe estado `empty` para clima.
 - **Rastreabilidade:** AC-05, AC-07, AC-10, AC-14, AC-15, NFR-02.
 - **Dependências:** T-14.
 - **Arquivos prováveis:** `tests/unit/components/Forecast.test.tsx`.
@@ -269,7 +269,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-29 — Validar E2E e viewport mobile
 
 - **Descrição:** testar o fluxo integrado com Playwright e APIs interceptadas.
-- **Critérios de aceite:** com APIs interceptadas, asserts verificam busca → seleção → clima e cinco dias, troca de unidade sem novo request, vazio, erro/retry, timeout e resposta obsoleta; em 320, 768 e 1280 px e retrato/paisagem, `scrollWidth <= clientWidth` nos fluxos essenciais.
+- **Critérios de aceite:** com APIs interceptadas, um teste E2E percorre busca → seleção → clima atual → previsão de cinco dias → troca de unidade e confirma que a troca não gera novo request; testes adicionais cobrem vazio, erro/retry, timeout e resposta obsoleta; o fluxo principal passa no projeto mobile do Playwright e em 320, 768 e 1280 px, retrato/paisagem, com `scrollWidth <= clientWidth`.
 - **Rastreabilidade:** US-01 a US-05, AC-01 a AC-15, NFR-01/02.
 - **Dependências:** T-17, T-18, T-22 a T-28.
 - **Arquivos prováveis:** `tests/e2e/weather-app.spec.ts`, `playwright.config.ts`.
