@@ -212,6 +212,23 @@ describe('getWeather', () => {
     expect(requestUrl.searchParams.get('temperature_unit')).toBe('celsius');
   });
 
+  it('maps null current precipitation to zero', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          ...forecastPayload,
+          current: { ...forecastPayload.current, precipitation: null },
+        }),
+      }),
+    );
+
+    await expect(getWeather(city)).resolves.toMatchObject({
+      current: { precipitationMm: 0 },
+    });
+  });
+
   it.each(['current', 'daily'] as const)('rejects a response without %s', async (missingField) => {
     const incompletePayload = { ...forecastPayload };
     delete incompletePayload[missingField];

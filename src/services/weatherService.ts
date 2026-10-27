@@ -84,7 +84,7 @@ function mapCurrent(value: Record<string, unknown>): CurrentWeather {
     condition: getWeatherCondition(nullableNumber(value.weather_code)),
     humidityPercent: nullableNumber(value.relative_humidity_2m),
     windSpeedKmh: nullableNumber(value.wind_speed_10m),
-    precipitationMm: nullableNumber(value.precipitation),
+    precipitationMm: value.precipitation === null ? 0 : nullableNumber(value.precipitation),
     pressureHpa: nullableNumber(value.surface_pressure),
   };
 }
