@@ -15,12 +15,19 @@ describe('convertTemperature', () => {
     expect(convertTemperature(null, 'celsius')).toBeNull();
     expect(convertTemperature(null, 'fahrenheit')).toBeNull();
   });
+
+  it('rounds negative Fahrenheit half values away from zero', () => {
+    const celsiusForNegativeHalfFahrenheit = ((-31.5 - 32) * 5) / 9;
+
+    expect(convertTemperature(celsiusForNegativeHalfFahrenheit, 'fahrenheit')).toBe(-32);
+  });
 });
 
 describe('formatTemperature', () => {
   it('rounds Fahrenheit and includes the unit symbol', () => {
     expect(formatTemperature(0, 'fahrenheit')).toBe('32 °F');
     expect(formatTemperature(18.4, 'fahrenheit')).toBe('65 °F');
+    expect(formatTemperature(((-31.5 - 32) * 5) / 9, 'fahrenheit')).toBe('-32 °F');
   });
 
   it('formats Celsius decimals with a localized decimal separator and symbol', () => {

@@ -212,6 +212,12 @@ describe('getWeather', () => {
     expect(requestUrl.searchParams.get('temperature_unit')).toBe('celsius');
   });
 
+  it('throws WeatherServiceError for a non-ok forecast response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+
+    await expect(getWeather(city)).rejects.toBeInstanceOf(WeatherServiceError);
+  });
+
   it('maps null current precipitation to zero', async () => {
     vi.stubGlobal(
       'fetch',
@@ -226,6 +232,51 @@ describe('getWeather', () => {
 
     await expect(getWeather(city)).resolves.toMatchObject({
       current: { precipitationMm: 0 },
+    });
+  });
+
+  it('maps omitted current and daily fields to null while preserving all forecast dates', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          timezone: 'Europe/Lisbon',
+          current: {
+            temperature_2m: null,
+            weather_code: null,
+            relative_humidity_2m: null,
+            wind_speed_10m: null,
+            precipitation: null,
+            surface_pressure: null,
+          },
+          daily: { time: forecastPayload.daily.time },
+        }),
+      }),
+    );
+
+    await expect(getWeather(city)).resolves.toMatchObject({
+      current: {
+        temperatureCelsius: null,
+        condition: null,
+        humidityPercent: null,
+        windSpeedKmh: null,
+        precipitationMm: 0,
+        pressureHpa: null,
+      },
+      days: [
+        {
+          localDate: '2026-10-27',
+          temperatureMaxCelsius: null,
+          temperatureMinCelsius: null,
+          precipitationProbabilityPercent: null,
+          condition: null,
+        },
+        { localDate: '2026-10-28' },
+        { localDate: '2026-10-29' },
+        { localDate: '2026-10-30' },
+        { localDate: '2026-10-31' },
+      ],
     });
   });
 
