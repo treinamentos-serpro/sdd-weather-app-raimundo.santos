@@ -34,6 +34,7 @@ const forecastPayload = {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -80,6 +81,7 @@ describe('searchCities', () => {
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
       'https://geocoding-api.open-meteo.com/v1/search?name=New%20York&count=10&language=pt&format=json',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -111,6 +113,36 @@ describe('searchCities', () => {
     );
 
     await expect(searchCities('Lisboa')).resolves.toEqual([]);
+  });
+
+  it('converts network failures to WeatherServiceError and clears the timeout', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+
+    await expect(searchCities('Lisboa')).rejects.toThrow('Falha de rede.');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('converts AbortError to the timeout message and clears the timer', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn(
+      (_url: string, init: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => {
+            const error = new Error('aborted');
+            error.name = 'AbortError';
+            reject(error);
+          });
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const request = searchCities('Lisboa');
+    const rejection = expect(request).rejects.toThrow('A requisição demorou demais.');
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    await rejection;
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

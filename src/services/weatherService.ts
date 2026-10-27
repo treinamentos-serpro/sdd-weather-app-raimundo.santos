@@ -8,6 +8,7 @@ const CURRENT_FIELDS =
 const DAILY_FIELDS =
   'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max';
 const FORECAST_DAYS = 5;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 export class WeatherServiceError extends Error {
   constructor(message: string) {
@@ -18,6 +19,22 @@ export class WeatherServiceError extends Error {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    if (isRecord(error) && error.name === 'AbortError') {
+      throw new WeatherServiceError('A requisição demorou demais.');
+    }
+    throw new WeatherServiceError('Falha de rede.');
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function mapCity(value: unknown): City {
@@ -109,7 +126,7 @@ export async function searchCities(name: string): Promise<City[]> {
   if (!query) return [];
 
   const url = `${GEOCODING_URL}?name=${encodeURIComponent(query)}&count=10&language=pt&format=json`;
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
 
   if (!response.ok) {
     throw new WeatherServiceError(`Falha ao buscar cidades (HTTP ${response.status}).`);
@@ -150,7 +167,7 @@ export async function getWeather(city: City): Promise<WeatherData> {
     timezone: 'auto',
     forecast_days: String(FORECAST_DAYS),
   });
-  const response = await fetch(`${FORECAST_URL}?${params.toString()}`);
+  const response = await fetchWithTimeout(`${FORECAST_URL}?${params.toString()}`);
 
   if (!response.ok) {
     throw new WeatherServiceError(`Falha ao buscar previsão (HTTP ${response.status}).`);
