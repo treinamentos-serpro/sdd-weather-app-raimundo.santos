@@ -14,7 +14,7 @@ export default function App() {
   const { status, data, error, search, retry } = useWeather();
 
   return (
-    <div className="min-h-screen bg-night-900 text-white">
+    <div className="min-h-screen bg-night-900 font-sans text-white">
       <a
         href="#main-content"
         className="sr-only rounded-sm bg-night-900 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
