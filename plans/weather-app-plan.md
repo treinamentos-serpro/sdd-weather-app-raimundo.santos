@@ -112,18 +112,20 @@ export interface WeatherData {
   days: ForecastDay[]; // Cinco datas locais; campos ausentes usam null
 }
 
-export type RequestErrorKind = 'network' | 'http' | 'timeout' | 'invalid-response';
+export type RequestErrorKind = 'network' | 'http' | 'api' | 'timeout' | 'invalid-response';
 
 export interface RequestError {
   kind: RequestErrorKind;
-  message: string; // mensagem de UI localizada em pt-BR
+  message: string; // Mensagem segura e localizada em pt-BR; não expor payload bruto
 }
 
 export type AsyncState<T> =
   | { status: 'idle' | 'loading' }
   | { status: 'success'; data: T }
-  | { status: 'empty' }
   | { status: 'error'; error: RequestError };
+
+export type SearchState = AsyncState<City[]> | { status: 'empty' };
+export type WeatherState = AsyncState<WeatherData>;
 ```
 
 `City.id` deve identificar unicamente o resultado selecionável; usar o identificador do provedor quando disponível e uma chave estável baseada na identidade geográfica quando não estiver. Campos opcionais não devem ser inventados. `WeatherData.days` contém as cinco datas locais esperadas; valores ausentes são `null` conforme AC-10. A decisão sobre qual estatística diária da Open-Meteo alimentar `ForecastDay.temperatureCelsius` (máxima, mínima ou média) permanece pendente e precisa ser resolvida antes de fechar o contrato da API (AC-07, Open Questions 2 e 6).
@@ -213,34 +215,44 @@ O código numérico de condição segue os códigos WMO da Open-Meteo; `labelPtB
 
 ## State Management
 
-Manter estado local no hook `useWeatherApp`; sem Redux, Context global ou cache.
+Manter estado de aplicação local no hook `useWeatherApp`; sem Redux, Context global ou cache. O hook é a única fonte de verdade para busca, seleção, consulta e unidade; componentes recebem estado via props e notificam intenções via callbacks.
 
 | Estado | Tipo proposto | Regra |
 | --- | --- | --- |
 | Texto de busca | `string` | Controlado pela UI; trim somente no envio |
-| Busca | `AsyncState<City[]>` | `empty` representa resposta bem-sucedida sem resultados |
+| Busca | `SearchState` | `idle` inicial; `loading`; `success` com resultados; `empty` somente para resposta válida sem resultados; `error` para falhas |
 | Cidade selecionada | `City | null` | Só muda após seleção explícita |
-| Clima | `AsyncState<WeatherData>` | Limpar ao selecionar cidade diferente |
+| Clima | `WeatherState` | `idle` sem seleção; `loading`; `success`; `error`; não usa `empty` |
 | Unidade | `Unit` | Inicial `celsius`; permanece na página atual |
 
-Busca e clima têm estados independentes. Retry é ação explícita e repete os mesmos parâmetros. Não guardar termo, cidade ou unidade em localStorage/servidor (AC-04, AC-11, AC-13; NFR-05).
+Busca e clima têm estados independentes: uma busca vazia não apaga uma consulta previamente selecionada (AC-04). Selecionar cidade inicia `weather=loading`, limpa o clima anterior e invalida a requisição anterior. Retry é explícito e repete os mesmos parâmetros. Não guardar termo, cidade ou unidade em localStorage/servidor (AC-04, AC-05, AC-11, AC-13; NFR-05).
+
+A temperatura armazenada no domínio permanece sempre em Celsius. A UI deriva o valor apresentado durante a renderização; alternar `unit` atualiza a tela, não chama serviços e não altera `WeatherData`:
+
+```ts
+function toDisplayTemperature(valueCelsius: number | null, unit: Unit): number | null;
+```
+
+Se o valor for `null`, a função retorna `null` e a UI exibe “indisponível”. Para Celsius, retorna o valor original; para Fahrenheit, calcula $F = C \times 9/5 + 32$ e arredonda ao inteiro mais próximo, com metade arredondada para longe de zero, conforme AC-12. Aplicar a conversão tanto ao clima atual quanto a cada dia da previsão.
 
 ## Error Handling
 
-- Input vazio: validação local, sem request e mensagem orientadora (AC-01).
-- Geocoding bem-sucedido sem resultados: `empty`; preservar cidade/dados já selecionados e não iniciar forecast (AC-04).
-- Rede, HTTP ou payload inválido: `error` com tipo distinguível para telemetria operacional; UI em pt-BR com ação de retry (AC-08).
-- Timeout: 10 s por solicitação, sem retry automático; encerrar loading e oferecer retry manual (AC-09/13).
-- Falha de weather para cidade recém-selecionada: manter a identidade da nova cidade, não restaurar dados da seleção anterior e apresentar erro (AC-05/08).
-- Payload parcial: mapear campo ausente para `null`; mostrar “indisponível” no lugar do valor, mantendo os demais valores válidos (AC-10).
-- Fuso ausente/inválido: não usar fuso do dispositivo; previsão em estado indisponível (AC-15).
-- Respostas de seleção anterior: abortar quando possível e sempre impedir que sobrescrevam a seleção mais recente (AC-05).
+- **Rede:** falha de `fetch` (sem resposta HTTP) produz `error.kind='network'`; encerrar loading, mostrar mensagem pt-BR genérica e oferecer retry manual.
+- **HTTP/API:** resposta HTTP fora de 2xx produz `error.kind='http'`; resposta 2xx com envelope de erro do provedor produz `error.kind='api'`. Ambos encerram loading e permitem retry manual. Não expor corpo, URL interna ou mensagem bruta do provedor na UI.
+- **Timeout:** usar limite de 10 s por solicitação. Cancelar a solicitação com `AbortController`, definir `error.kind='timeout'`, encerrar loading e oferecer retry manual; timeout não é `empty`.
+- **Resposta inválida:** JSON ilegível ou estrutura incompatível com o contrato produz `error.kind='invalid-response'`; não tratar como lista vazia nem como resposta parcial.
+- **Resposta parcial válida:** manter `status='success'`; mapear somente os campos ausentes para `null`, renderizar “indisponível” para eles e manter os campos válidos. Não inventar ou reutilizar valores anteriores (AC-10).
+- **Busca sem resultados:** geocoding 2xx com `results` vazio produz `search.status='empty'`; preservar a seleção e o clima atuais, sem iniciar forecast (AC-04).
+- **Falha meteorológica após nova seleção:** preservar o identificador da nova cidade, manter `weather.status='error'` e não restaurar dados da cidade anterior (AC-05/08).
+- **Retry:** somente após ação explícita; repetir os mesmos parâmetros para a operação que falhou, sem retry automático (AC-08/09/13).
+- **Fuso ausente/inválido:** previsão em estado de indisponibilidade, sem usar o fuso do dispositivo (AC-15).
+- **Respostas obsoletas:** abortar quando possível e sempre impedir que resposta de seleção anterior sobrescreva a seleção mais recente (AC-05).
 
 ## Testing Strategy
 
 - **Vitest — `lib/`:** testar mapeamento de DTO, códigos WMO, datas locais e conversão/arredondamento com entradas e saídas fixas; sem mocks de rede, React ou relógio quando não necessários (AC-02/03/06/07/10/11/12/15).
-- **Vitest — `services/`:** substituir `fetch` por respostas controladas para validar URL/parâmetros, status HTTP, payload inválido, timeout e cancelamento; os testes não acessam a Open-Meteo real (AC-08/09/13).
-- **Vitest — `hooks/`:** substituir serviços por funções mockadas e verificar transições loading/success/empty/error, retry, unidade e descarte de resposta obsoleta (AC-04/05/08/11/13).
+- **Vitest — `services/`:** substituir `fetch` por respostas controladas para validar URL/parâmetros, erro de rede, HTTP, envelope de erro da API, payload inválido, timeout e cancelamento; os testes não acessam a Open-Meteo real (AC-08/09/13).
+- **Vitest — `hooks/`:** substituir serviços por funções mockadas e verificar transições idle/loading/success/empty/error, retry, mudança de unidade sem nova chamada ao serviço e descarte de resposta obsoleta (AC-04/05/08/11/12/13).
 - **Testing Library — `components/`:** renderizar componentes com props/handlers controlados e validar conteúdo, mensagens, interação por teclado e semântica acessível, sem depender de APIs ou estado global (AC-01, AC-04, AC-06/07, AC-13/14; NFR-02).
 - **Playwright — E2E:** cobrir busca → seleção → clima e previsão, alternância de unidade, busca vazia/sem resultados, falha e timeout com APIs interceptadas e fixtures determinísticas (US-01 a US-05; AC-01 a AC-15).
 - **Viewports:** validar os fluxos essenciais em 320, 768 e 1280 px e retrato/paisagem (NFR-01); manter Chromium desktop e projeto mobile já configurados como base.
