@@ -21,11 +21,11 @@ Aplicação web de consulta meteorológica que permite pesquisar e selecionar um
 
 ## Functional Requirements
 
-- **FR-01 — Buscar e selecionar uma cidade:** o usuário deve poder pesquisar uma cidade e selecionar o local desejado. Quando houver resultados que possam ser confundidos, eles devem fornecer contexto geográfico suficiente para apoiar a escolha correta. Critérios: AC-01 e AC-02.
-- **FR-02 — Consultar o clima atual:** após a seleção de uma cidade, o sistema deve exibir as condições meteorológicas atuais disponíveis para esse local. Os campos exatos ainda dependem de decisão de produto. Critérios: AC-03 e AC-04.
-- **FR-03 — Consultar previsão de cinco dias:** para a cidade selecionada, o sistema deve exibir a previsão para hoje e os quatro dias seguintes. A previsão diária ou horária e seus campos ainda dependem de decisão. Critérios: AC-03 e AC-05.
+- **FR-01 — Buscar e selecionar uma cidade:** o usuário deve poder pesquisar uma cidade e selecionar o local desejado. Resultados devem mostrar cidade, região administrativa e país para distinguir locais homônimos. Critérios: AC-01 e AC-02.
+- **FR-02 — Consultar o clima atual:** após a seleção de uma cidade, o sistema deve exibir, no mínimo, temperatura e condição meteorológica atuais para esse local. Critérios: AC-03 e AC-04.
+- **FR-03 — Consultar previsão de cinco dias:** para a cidade selecionada, o sistema deve exibir a previsão de hoje e dos quatro dias seguintes, organizada por data, com no mínimo temperatura e condição meteorológica em cada data. A inclusão de intervalos horários permanece em aberto. Critérios: AC-05.
 - **FR-04 — Alternar unidade de temperatura:** o usuário deve poder alternar entre Celsius e Fahrenheit; Celsius é a unidade inicial. A seleção deve ser aplicada consistentemente a todas as temperaturas exibidas. Critérios: AC-06 e AC-07.
-- **FR-05 — Comunicar estados da consulta:** durante busca e carregamento meteorológico, o sistema deve indicar que a operação está em andamento. Se a busca não retornar cidades ou a consulta meteorológica falhar ou exceder o tempo limite, deve informar o estado sem apresentar a consulta como bem-sucedida. Critérios: AC-02, AC-04 e AC-08.
+- **FR-05 — Comunicar estados da consulta:** durante busca e carregamento meteorológico, o sistema deve indicar que a operação está em andamento. Se a busca não retornar cidades ou a consulta meteorológica falhar ou exceder o tempo limite, deve informar o estado sem apresentar a consulta como bem-sucedida. Critérios: AC-08, AC-09 e AC-10.
 
 ## User Stories
 
@@ -37,15 +37,52 @@ Aplicação web de consulta meteorológica que permite pesquisar e selecionar um
 
 ## Acceptance Criteria
 
-- **AC-01 — Busca e seleção:** ao pesquisar uma cidade e escolher um resultado, o local escolhido fica identificado como a cidade consultada e é usado para carregar os dados meteorológicos.
-- **AC-02 — Busca sem resultado ou ambígua:** uma busca sem correspondências apresenta um estado vazio compreensível; resultados com nomes potencialmente iguais apresentam contexto geográfico que permita distingui-los. Os campos exatos de contexto serão definidos em uma pergunta aberta.
-- **AC-03 — Cidade consultada:** após selecionar um local, as informações meteorológicas exibidas são associadas a esse local, e não a outro resultado da busca.
-- **AC-04 — Clima atual e carregamento:** enquanto os dados atuais estão sendo obtidos, há indicação de carregamento; quando a consulta conclui com sucesso, as condições atuais disponíveis são exibidas para a cidade selecionada. Se a consulta falhar ou exceder o tempo limite, uma mensagem de falha é exibida e dados indisponíveis não são apresentados como atuais.
-- **AC-05 — Janela da previsão:** uma consulta bem-sucedida apresenta exatamente cinco datas locais consecutivas, começando em hoje e incluindo os quatro dias seguintes. A granularidade diária ou horária e o fuso horário a usar precisam ser definidos antes de detalhar a validação do conteúdo.
-- **AC-06 — Unidade inicial:** na primeira consulta sem uma seleção anterior aplicável, as temperaturas são apresentadas em Celsius e identificadas como °C.
-- **AC-07 — Alternância consistente:** ao selecionar Fahrenheit, todas as temperaturas visíveis passam a ser apresentadas em Fahrenheit e identificadas como °F; ao retornar para Celsius, todas passam a Celsius e °C. Nenhuma área de clima atual ou previsão permanece com a unidade anterior.
-- **AC-08 — Estado de busca:** durante a busca, o sistema indica que está carregando; em falha ou timeout, informa que não foi possível concluir a busca e não trata a operação como resultado vazio bem-sucedido.
-- **AC-09 — Idioma:** os textos da interface necessários para busca, estados e consulta meteorológica estão em pt-BR.
+- **AC-01 (FR-01) — Identificação dos resultados:**
+	- **Given** que a busca retorna duas cidades homônimas em regiões administrativas ou países diferentes
+	- **When** os resultados da busca são exibidos
+	- **Then** cada resultado mostra o nome da cidade, a região administrativa e o país retornados para aquele local
+- **AC-02 (FR-01) — Seleção da cidade:**
+	- **Given** que os resultados da busca contêm a cidade pretendida
+	- **When** o usuário seleciona um resultado
+	- **Then** a cidade selecionada, incluindo região administrativa e país, é identificada na consulta e os dados exibidos correspondem ao resultado selecionado
+- **AC-03 (FR-02) — Exibição do clima atual:**
+	- **Given** que existe uma cidade selecionada e uma resposta meteorológica atual bem-sucedida com temperatura e condição
+	- **When** o carregamento dessa resposta termina
+	- **Then** a interface exibe para a cidade selecionada a temperatura e a condição contidas na resposta
+- **AC-04 (FR-02) — Falha ao obter clima atual:**
+	- **Given** que a consulta do clima atual da cidade selecionada falha ou excede o tempo limite
+	- **When** o sistema conclui que a consulta não pode ser apresentada como bem-sucedida
+	- **Then** a interface exibe um estado de falha e não apresenta dados ausentes como clima atual disponível
+- **AC-05 (FR-03) — Previsão de cinco dias:**
+	- **Given** que a cidade selecionada possui uma resposta de previsão bem-sucedida para hoje e os quatro dias seguintes, segundo as datas locais dessa cidade
+	- **When** a previsão é exibida
+	- **Then** são apresentados cinco grupos de datas locais consecutivas em ordem cronológica, começando em hoje, e cada grupo mostra ao menos uma temperatura e uma condição meteorológica daquela data
+- **AC-06 (FR-04) — Unidade inicial:**
+	- **Given** que não há unidade escolhida anteriormente na sessão atual
+	- **When** temperaturas do clima atual ou da previsão são exibidas
+	- **Then** todas são apresentadas em Celsius e identificadas com °C
+- **AC-07 (FR-04) — Alternância de unidade:**
+	- **Given** que o clima atual e a previsão contêm temperaturas conhecidas, incluindo 0 °C e 100 °C
+	- **When** o usuário seleciona Fahrenheit
+	- **Then** todas as temperaturas visíveis do clima atual e da previsão são identificadas com °F, 0 °C é apresentado como 32 °F e 100 °C como 212 °F
+	- **When** o usuário seleciona Celsius novamente
+	- **Then** todas as temperaturas visíveis são identificadas com °C e retornam aos valores Celsius correspondentes
+- **AC-08 (FR-05) — Carregamento:**
+	- **Given** que uma busca de cidade ou consulta meteorológica foi iniciada e ainda não recebeu resposta
+	- **When** a operação permanece pendente
+	- **Then** a interface apresenta um indicador visível de carregamento associado à operação pendente
+- **AC-09 (FR-05) — Busca sem resultados:**
+	- **Given** que a busca de cidade termina com sucesso e retorna uma lista vazia
+	- **When** a interface apresenta o resultado da busca
+	- **Then** é exibido um estado de ausência de resultados, distinto do estado de falha
+- **AC-10 (FR-05) — Falha ou timeout:**
+	- **Given** que a busca de cidade ou a consulta meteorológica retorna erro ou excede o tempo limite
+	- **When** a operação termina sem uma resposta bem-sucedida
+	- **Then** é exibido um estado de falha distinto do estado sem resultados e nenhum dado inexistente é apresentado como resultado atual
+- **AC-11 — Idioma:**
+	- **Given** que a interface está carregada
+	- **When** textos de busca, estados e consulta meteorológica são exibidos
+	- **Then** esses textos estão em pt-BR
 
 ## Non-Functional Requirements
 
@@ -112,11 +149,11 @@ Não fazem parte da primeira versão conforme as decisões disponíveis; qualque
 
 1. Quem são os usuários prioritários e quais situações de uso devem orientar as prioridades? Quais métricas de negócio ou sucesso serão usadas?
 2. Alertas de tempo severo fazem parte do produto futuro ou a aplicação se limita a condições atuais e previsão regular?
-3. Quais países e regiões a busca deve cobrir? Como será a interação de busca (texto livre, sugestões enquanto digita ou outra) e quais campos geográficos identificam cada resultado?
+3. Quais países e regiões a busca deve cobrir? Como será a interação de busca (texto livre, sugestões enquanto digita ou outra) e qual será o fallback quando a fonte não retornar região administrativa para um resultado?
 4. Qual deve ser o comportamento após busca sem resultado, falha ou timeout, além da mensagem de estado? Deve haver ação de tentar novamente?
 5. A seleção será exclusivamente manual ou haverá cidade padrão, geolocalização, histórico ou favoritos?
-6. Quais campos meteorológicos devem aparecer no clima atual e em cada dia da previsão? A previsão será diária ou horária?
-7. Qual fuso horário define as datas da previsão e o limite de cada dia? Como datas e horários devem ser formatados em pt-BR?
+6. Quais campos meteorológicos adicionais, além de temperatura e condição, devem aparecer no clima atual e na previsão? A previsão deve incluir intervalos horários?
+7. Como datas e horários locais devem ser formatados em pt-BR? Qual fallback usar se não houver fuso horário disponível para a cidade?
 8. Com que frequência os dados devem ser atualizados e qual idade máxima é aceitável? A interface deve mostrar horário da última atualização?
 9. A troca de unidade afeta apenas temperatura? Quais unidades e convenções serão usadas para vento, precipitação e outros campos, se exibidos?
 10. A unidade escolhida deve persistir entre visitas ou dispositivos? Se sim, onde e por quanto tempo?
