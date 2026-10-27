@@ -123,12 +123,74 @@ export type AsyncState<T> =
 
 Sem API key. Encapsular URLs e payloads exclusivamente em `openMeteoService.ts`.
 
-| Serviço | Endpoint e parâmetros | Contrato usado |
-| --- | --- | --- |
-| Geocoding | `https://geocoding-api.open-meteo.com/v1/search`; `name=<query>&count=10&language=pt&format=json` | Mapear identificador, `name`, `latitude`, `longitude`, `admin1`, `country`, `country_code` e `timezone` quando presentes. Campos geográficos opcionais continuam opcionais no domínio (AC-02/03). |
-| Forecast | `https://api.open-meteo.com/v1/forecast`; `latitude`, `longitude`, `current=temperature_2m,weather_code`, `daily=weather_code,<daily_temperature_field>`, `temperature_unit=celsius`, `timezone=auto`, `forecast_days=5` | `current` alimenta `CurrentWeather`; `daily` alimenta cinco `ForecastDay`; `timezone` fornece o fuso local (AC-06/07/15). |
+### Geocoding
 
-`<daily_temperature_field>` é intencionalmente um marcador, não um parâmetro a enviar: substituir pelo campo de temperatura diária aprovado (máxima, mínima ou média) antes de implementar. Validar formato e códigos de clima no mapper; payload malformado vira `invalid-response`, e campo ausente vira `null` (AC-08/10). Confirmar cobertura, limites, atribuição e termos da Open-Meteo antes do go-live (Risks & Trade-offs).
+**Método e URL:** `GET https://geocoding-api.open-meteo.com/v1/search`
+
+Parâmetros usados: `name=<query>` (texto após remover espaços externos), `count=10`, `language=pt` e `format=json`.
+
+Exemplo resumido de resposta:
+
+```json
+{
+  "results": [
+    {
+      "id": 2267057,
+      "name": "Lisbon",
+      "latitude": 38.7167,
+      "longitude": -9.1333,
+      "country_code": "PT",
+      "country": "Portugal",
+      "admin1": "Lisbon",
+      "timezone": "Europe/Lisbon"
+    }
+  ]
+}
+```
+
+Mapeamento para `City`: `id` vira string estável; `name`, `latitude` e `longitude` são obrigatórios; `admin1`, `country`, `country_code` e `timezone` viram `admin1`, `country`, `countryCode` e `timeZone` opcionais. Não sintetizar valores geográficos ausentes. Resposta válida sem `results` ou com lista vazia vira estado `empty` (AC-03/04); estrutura inválida vira `invalid-response`.
+
+### Forecast
+
+**Método e URL:** `GET https://api.open-meteo.com/v1/forecast`
+
+Parâmetros: `latitude` e `longitude` da `City` selecionada; `current=temperature_2m,weather_code`; `daily=weather_code,<daily_temperature_field>`; `temperature_unit=celsius`; `timezone=auto`; `forecast_days=5`. O marcador `<daily_temperature_field>` não é literal: substituir pelo campo diário escolhido pelo produto, por exemplo `temperature_2m_max` ou `temperature_2m_min`. A spec ainda não define qual estatística apresentar, então a consulta e o mapeamento final desse campo permanecem pendentes (AC-07).
+
+Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustrar a forma do payload, não como escolha de produto:
+
+```json
+{
+  "timezone": "Europe/Lisbon",
+  "current_units": {
+    "temperature_2m": "°C",
+    "weather_code": "wmo code"
+  },
+  "current": {
+    "time": "2026-10-27T12:15",
+    "temperature_2m": 18.4,
+    "weather_code": 2
+  },
+  "daily_units": {
+    "time": "iso8601",
+    "temperature_2m_max": "°C",
+    "weather_code": "wmo code"
+  },
+  "daily": {
+    "time": ["2026-10-27", "2026-10-28"],
+    "temperature_2m_max": [20.1, 21.3],
+    "weather_code": [2, 3]
+  }
+}
+```
+
+Mapeamento para o modelo:
+
+- `current.temperature_2m` → `CurrentWeather.temperatureCelsius`; `current.weather_code` → `CurrentWeather.condition.code` e `labelPtBr` pela tabela de códigos validada.
+- Para cada índice `i`, `daily.time[i]` → `ForecastDay.localDate`; `daily.<daily_temperature_field>[i]` → `ForecastDay.temperatureCelsius`; `daily.weather_code[i]` → `ForecastDay.condition`.
+- `timezone` → `WeatherData.timeZone`; a `City` selecionada → `WeatherData.city`; os objetos `current` e `daily` normalizados → `WeatherData.current` e `WeatherData.days`.
+- `current_units` e `daily_units` validam que as temperaturas recebidas são °C; ausência de valor mapeia para `null`, não para zero (AC-06/10). Converter para a unidade escolhida somente na apresentação (AC-11/12).
+
+O código numérico de condição segue os códigos WMO da Open-Meteo; `labelPtBr` exige uma tabela de tradução testada. Confirmar cobertura, limites, atribuição e termos do provedor antes do go-live (AC-06/07; Risks & Trade-offs).
 
 ## State Management
 
