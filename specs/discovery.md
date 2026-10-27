@@ -19,11 +19,11 @@ A empresa solicita uma aplicação de previsão do tempo para que usuários cons
 
 ## Riscos
 
-As probabilidades são estimativas iniciais, pois ainda não há fonte de dados, público-alvo ou metas de qualidade definidos.
+As probabilidades são estimativas iniciais. A fonte de dados já foi escolhida, mas seus limites, o público-alvo e as metas de qualidade ainda precisam ser confirmados.
 
 | Risco | Probabilidade | Impacto | Estratégia de mitigação |
 | --- | --- | --- | --- |
-| Indisponibilidade, limite de requisições ou mudança na API meteorológica | Média | Alto: clima atual e previsão podem deixar de carregar. | Avaliar cobertura, limites, licença e SLA antes da escolha; tratar falhas e timeouts; monitorar erros e definir resposta degradada ou alternativa. |
+| Indisponibilidade, limite de requisições ou mudança na API meteorológica | Média | Alto: clima atual e previsão podem deixar de carregar. | Confirmar cobertura, limites, licença e condições de uso da Open-Meteo; tratar falhas e timeouts; monitorar erros e definir resposta degradada ou alternativa. |
 | Dados incompletos, atrasados ou inconsistentes para a cidade escolhida | Média | Alto: o usuário pode tomar decisões com informação incorreta ou desatualizada. | Definir requisitos de cobertura e atualização; validar e indicar horário da última atualização; comunicar ausência de dados em vez de apresentar valores como atuais. |
 | Cidades homônimas ou resultados geográficos imprecisos | Alta | Médio: previsão de um local diferente do pretendido. | Exibir contexto suficiente (estado/região e país), permitir confirmação explícita e validar coordenadas retornadas pela fonte. |
 | Escopo indefinido de “cinco dias” e dos campos da previsão | Alta | Alto: retrabalho de produto e interface, além de divergência com a expectativa do usuário. | Decidir se o período inclui hoje, granularidade e campos antes de fechar a especificação e validar a interpretação com usuários ou stakeholders. |
@@ -50,41 +50,47 @@ O briefing define capacidades gerais, mas não os critérios de conteúdo, opera
 5. **Como o usuário pesquisa e seleciona uma cidade: texto livre, sugestões enquanto digita ou outra interação?** Impacto: a equipe pode implementar um fluxo inadequado, especialmente em telas pequenas.
 6. **Quais informações identificam uma cidade nos resultados, como estado, região ou país, e como tratar homônimos?** Impacto: o usuário pode selecionar um local incorreto e receber dados irrelevantes.
 7. **O que deve ocorrer quando não há resultados, a busca falha ou o serviço está indisponível?** Impacto: não será possível definir estados vazios, mensagens ou recuperação, deixando o usuário sem orientação.
-8. **A seleção de cidade é sempre manual ou são esperadas geolocalização, cidade padrão, histórico ou favoritos?** Impacto: decisões sobre permissões, persistência, privacidade e escopo podem surgir tarde e alterar a arquitetura.
+8. **A seleção de cidade é sempre manual ou são esperadas geolocalização, cidade padrão, histórico ou favoritos?** Impacto: decisões sobre permissões, persistência local, privacidade e escopo podem surgir tarde e alterar a arquitetura; a ausência de autenticação e persistência de servidor não resolve essas opções.
 
 ### Informações meteorológicas
 
 9. **Quais campos devem aparecer no clima atual e em cada dia da previsão?** Impacto: conteúdo, layout, fonte de dados e critérios de aceite permanecem indefinidos.
-10. **O que significa “previsão de 5 dias”: inclui hoje ou os cinco dias completos seguintes?** Impacto: datas, quantidade de itens e expectativas do usuário podem divergir.
-11. **A previsão deve ser diária ou incluir intervalos horários?** Impacto: muda substancialmente a quantidade de dados, a interface e possivelmente o custo de acesso à fonte.
-12. **Qual fuso horário e limite de dia serão usados para apresentar datas e condições locais?** Impacto: dias da previsão podem aparecer deslocados, sobretudo para usuários em outro fuso.
-13. **Com que frequência os dados devem ser atualizados e qual idade máxima ainda é aceitável?** Impacto: sem esse limite, dados desatualizados podem ser apresentados como atuais e não há critério para cache.
-14. **A alternância Celsius/Fahrenheit se aplica somente à temperatura? Quais unidades serão usadas para vento, precipitação e outros campos, se exibidos?** Impacto: usuários podem ver unidades inconsistentes ou não compreender os valores.
-15. **Qual unidade deve ser selecionada inicialmente e a preferência deve persistir entre visitas ou dispositivos?** Impacto: a experiência inicial e as regras de armazenamento ficam sujeitas a interpretações diferentes.
+10. **A previsão deve ser diária ou incluir intervalos horários?** Impacto: muda substancialmente a quantidade de dados, a interface e possivelmente o custo de acesso à fonte.
+11. **Qual fuso horário e limite de dia serão usados para apresentar datas e condições locais?** Impacto: dias da previsão podem aparecer deslocados, sobretudo para usuários em outro fuso.
+12. **Com que frequência os dados devem ser atualizados e qual idade máxima ainda é aceitável?** Impacto: sem esse limite, dados desatualizados podem ser apresentados como atuais e não há critério para cache.
+13. **A alternância Celsius/Fahrenheit se aplica somente à temperatura? Quais unidades serão usadas para vento, precipitação e outros campos, se exibidos?** Impacto: usuários podem ver unidades inconsistentes ou não compreender os valores.
+14. **A preferência de unidade deve persistir entre visitas ou dispositivos?** Impacto: a unidade inicial já foi definida como Celsius, mas sem essa decisão o comportamento após uma nova visita ou em outro dispositivo permanece indefinido.
 
 ### Plataforma e qualidade
 
-16. **“Usar em dispositivos móveis” significa um site responsivo, um app instalável (PWA), aplicativos nativos ou mais de uma opção?** Impacto: a decisão muda tecnologia, distribuição, custo e o que significa considerar a experiência mobile atendida.
-17. **Quais tamanhos de tela, sistemas operacionais, navegadores e orientações devem ser suportados?** Impacto: não há uma matriz objetiva de compatibilidade para design e testes.
-18. **Qual padrão ou nível de acessibilidade deve ser atendido?** Impacto: acessibilidade pode ser aplicada de modo inconsistente e ser descoberta tarde, quando corrigir controles e estrutura é mais caro.
-19. **Quais são as metas de performance para busca e carregamento das informações?** Impacto: não há critério para avaliar lentidão nem para decidir sobre otimização ou cache.
-20. **Qual disponibilidade é esperada e o que deve acontecer quando a fonte de dados falhar?** Impacto: não é possível definir metas de confiabilidade, degradação, mensagens ou contingência.
-21. **O app deve funcionar sem conexão ou exibir dados armazenados anteriormente?** Impacto: suporte offline altera armazenamento, política de validade e como comunicar a idade dos dados.
-22. **Quais idiomas, formatos de data/hora e convenções regionais serão necessários?** Impacto: textos, unidades, datas e formatos podem não corresponder à localização dos usuários.
+15. **“Usar em dispositivos móveis” significa um site responsivo, um app instalável (PWA), aplicativos nativos ou mais de uma opção?** Impacto: a decisão muda tecnologia, distribuição, custo e o que significa considerar a experiência mobile atendida.
+16. **Quais tamanhos de tela, sistemas operacionais, navegadores e orientações devem ser suportados?** Impacto: não há uma matriz objetiva de compatibilidade para design e testes.
+17. **Qual padrão ou nível de acessibilidade deve ser atendido?** Impacto: acessibilidade pode ser aplicada de modo inconsistente e ser descoberta tarde, quando corrigir controles e estrutura é mais caro.
+18. **Quais são as metas de performance para busca e carregamento das informações?** Impacto: não há critério para avaliar lentidão nem para decidir sobre otimização ou cache.
+19. **Qual disponibilidade é esperada e o que deve acontecer quando a fonte de dados falhar?** Impacto: não é possível definir metas de confiabilidade, degradação, mensagens ou contingência.
+20. **O app deve funcionar sem conexão ou exibir dados armazenados anteriormente?** Impacto: suporte offline altera armazenamento, política de validade e como comunicar a idade dos dados.
+21. **Quais formatos de data/hora e convenções regionais serão necessários para a interface em pt-BR?** Impacto: idioma da interface já foi definido, mas formatos de data, hora e demais convenções ainda podem divergir da expectativa local.
 
 ### Dados, privacidade e operação
 
-23. **Qual fonte de dados será usada e quais são seus limites de cobertura, atualização, licença, custo e requisições?** Impacto: a solução pode exceder limites, não cobrir regiões necessárias ou não ser viável para distribuição.
-24. **A aplicação coletará localização, histórico de busca, preferências ou métricas de uso? Por quanto tempo e para qual finalidade?** Impacto: sem definição, privacidade, consentimento, retenção e requisitos legais ficam sem tratamento adequado.
-25. **Existem requisitos de segurança, retenção de dados ou políticas corporativas que precisam ser atendidos?** Impacto: restrições descobertas tardiamente podem exigir mudanças no desenho e atrasar a entrega.
-26. **Quem será responsável por monitorar falhas, limites da fonte e qualidade dos dados após o lançamento?** Impacto: problemas de produção podem ficar sem detecção ou sem responsável por resolvê-los.
+22. **Quais são os limites de cobertura, atualização, licença, custo e requisições da Open-Meteo para o uso pretendido?** Impacto: a fonte foi escolhida, mas limitações podem inviabilizar a cobertura necessária ou exigir ajustes de operação e arquitetura.
+23. **Além de dados de conta e persistência no servidor, a aplicação coletará localização, histórico local, preferências ou métricas de uso? Por quanto tempo e para qual finalidade?** Impacto: a decisão de não usar autenticação nem persistência de servidor não define coleta no cliente ou telemetria; sem resposta, privacidade, consentimento e retenção ficam indefinidos.
+24. **Existem requisitos de segurança, retenção de dados ou políticas corporativas que precisam ser atendidos?** Impacto: restrições descobertas tardiamente podem exigir mudanças no desenho e atrasar a entrega.
+25. **Quem será responsável por monitorar falhas, limites da fonte e qualidade dos dados após o lançamento?** Impacto: problemas de produção podem ficar sem detecção ou sem responsável por resolvê-los.
 
 ## Suposições
 
 - A busca e a consulta de previsão são iniciadas pelo usuário para uma cidade escolhida.
 - A alternância entre Celsius e Fahrenheit afeta os valores de temperatura; demais unidades meteorológicas, se exibidas, ainda precisam ser definidas.
-- O serviço depende de uma fonte de dados externa ou interna que será definida posteriormente.
 - O requisito de uso em dispositivos móveis implica uma interface adaptável, mas não define por si só suporte offline, instalação como aplicativo ou versões específicas de sistemas operacionais.
+
+## Decisões
+
+- **Fonte de dados: Open-Meteo, sem API key.** Justificativa: evita a necessidade de gerenciar uma chave de API e reduz barreiras de configuração. Resolve a escolha da fonte na pergunta sobre provedores; cobertura, atualização, licença, limites de requisição e condições de uso ainda precisam ser confirmados.
+- **“5 dias” significa hoje mais os quatro dias seguintes.** Justificativa: estabelece uma janela de previsão concreta para a primeira versão. Resolve a ambiguidade sobre incluir o dia atual; granularidade (diária ou horária) e fuso horário continuam em aberto.
+- **Unidade padrão: Celsius.** Justificativa: oferece uma escolha inicial definida para a experiência. Resolve qual unidade aparece inicialmente; a persistência da preferência após visitas ou entre dispositivos continua em aberto.
+- **Sem autenticação e sem persistência de servidor.** Justificativa: mantém a primeira versão sem contas e sem armazenamento de dados de usuário no servidor. Resolve se são necessárias contas ou dados persistidos no servidor; não define armazenamento local, geolocalização, favoritos ou telemetria.
+- **Idioma da interface: pt-BR.** Justificativa: define o idioma principal da experiência. Resolve a escolha do idioma da interface; formatos de data/hora e outras convenções regionais ainda precisam ser detalhados.
 
 ## Personas (hipóteses)
 
