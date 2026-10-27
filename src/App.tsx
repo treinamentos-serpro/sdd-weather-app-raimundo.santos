@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import CurrentWeather from './components/CurrentWeather';
 import ForecastList from './components/ForecastList';
 import SearchBar from './components/SearchBar';
@@ -6,81 +6,12 @@ import EmptyState from './components/states/EmptyState';
 import ErrorState from './components/states/ErrorState';
 import LoadingState from './components/states/LoadingState';
 import UnitToggle from './components/UnitToggle';
-import { mockWeatherData } from './mocks/weatherData';
-import type { Unit, WeatherData } from './types/weather';
-
-type ContentState =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'empty' }
-  | { status: 'error'; message: string }
-  | { status: 'success'; data: WeatherData };
-
-const SEARCH_DELAY_MS = 250;
-
-function normalizeSearch(value: string): string {
-  return value
-    .trim()
-    .toLocaleLowerCase('pt-BR')
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '');
-}
-
-function matchesMockCity(query: string): boolean {
-  const normalizedQuery = normalizeSearch(query);
-  const searchableFields = [
-    mockWeatherData.city.name,
-    mockWeatherData.city.admin1,
-    mockWeatherData.city.country,
-  ]
-    .filter((value): value is string => Boolean(value))
-    .map(normalizeSearch);
-
-  return searchableFields.some(
-    (field) => field.includes(normalizedQuery) || normalizedQuery.includes(field),
-  );
-}
+import { useWeather } from './hooks/useWeather';
+import type { Unit } from './types/weather';
 
 export default function App() {
   const [unit, setUnit] = useState<Unit>('celsius');
-  const [content, setContent] = useState<ContentState>({ status: 'idle' });
-  const [lastSearch, setLastSearch] = useState('');
-  const requestId = useRef(0);
-
-  useEffect(() => {
-    return () => {
-      requestId.current += 1;
-    };
-  }, []);
-
-  async function searchMockCity(city: string) {
-    const activeRequest = ++requestId.current;
-    setLastSearch(city);
-    setContent({ status: 'loading' });
-
-    try {
-      await new Promise<void>((resolve) => {
-        window.setTimeout(resolve, SEARCH_DELAY_MS);
-      });
-
-      if (activeRequest !== requestId.current) return;
-
-      setContent(
-        matchesMockCity(city) ? { status: 'success', data: mockWeatherData } : { status: 'empty' },
-      );
-    } catch {
-      if (activeRequest === requestId.current) {
-        setContent({
-          status: 'error',
-          message: 'Não foi possível carregar os dados meteorológicos.',
-        });
-      }
-    }
-  }
-
-  function handleRetry() {
-    if (lastSearch) void searchMockCity(lastSearch);
-  }
+  const { status, data, error, search, retry } = useWeather();
 
   return (
     <div className="min-h-screen bg-night-900 text-white">
@@ -106,25 +37,22 @@ export default function App() {
               <span className="text-xl font-semibold tracking-normal text-white">Weather</span>
             </a>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/60">
-              DEMO
+              OPEN-METEO
             </span>
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
-            <SearchBar
-              onSearch={(city) => void searchMockCity(city)}
-              disabled={content.status === 'loading'}
-            />
+            <SearchBar onSearch={(name) => void search(name)} disabled={status === 'loading'} />
             <UnitToggle unit={unit} onChange={setUnit} />
           </div>
         </div>
       </header>
 
-      {(content.status === 'empty' || content.status === 'success') && (
+      {(status === 'empty' || (status === 'success' && data !== null)) && (
         <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-          {content.status === 'empty'
+          {status === 'empty'
             ? 'Nenhuma cidade encontrada. Confira o nome e tente buscar novamente.'
-            : `Clima carregado para ${content.data.city.name}.`}
+            : `Clima carregado para ${data?.city.name}.`}
         </p>
       )}
 
@@ -133,34 +61,37 @@ export default function App() {
         tabIndex={-1}
         className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
       >
-        {content.status === 'idle' && (
+        {status === 'idle' && (
           <section className="rounded-lg border border-white/10 bg-white/5 px-6 py-12 text-center shadow-glass backdrop-blur-md sm:py-16">
             <p className="text-sm font-medium uppercase text-accent-400">Weather</p>
             <h1 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
               Consulte o clima da sua cidade
             </h1>
             <p className="mt-2 text-sm text-white/60">
-              Busque Lisboa para ver os dados de demonstração.
+              Busque uma cidade para consultar o clima e a previsão.
             </p>
           </section>
         )}
 
-        {content.status === 'loading' && <LoadingState />}
+        {status === 'loading' && <LoadingState />}
 
-        {content.status === 'empty' && (
+        {status === 'empty' && (
           <EmptyState
             title="Nenhuma cidade encontrada"
             hint="Confira o nome e tente buscar novamente."
           />
         )}
 
-        {content.status === 'error' && (
-          <ErrorState message={content.message} onRetry={handleRetry} />
+        {status === 'error' && (
+          <ErrorState
+            message={error ?? 'Não foi possível carregar os dados meteorológicos.'}
+            onRetry={() => void retry()}
+          />
         )}
 
-        {content.status === 'success' && (
+        {status === 'success' && data && (
           <div className="space-y-8">
-            <CurrentWeather city={content.data.city} current={content.data.current} unit={unit} />
+            <CurrentWeather city={data.city} current={data.current} unit={unit} />
             <section aria-labelledby="forecast-heading" className="space-y-4">
               <div className="flex items-end justify-between gap-4">
                 <h2 id="forecast-heading" className="text-xl font-semibold text-white sm:text-2xl">
@@ -168,7 +99,7 @@ export default function App() {
                 </h2>
                 <p className="text-xs text-white/50">Dados de demonstração</p>
               </div>
-              <ForecastList days={content.data.days} unit={unit} />
+              <ForecastList days={data.days} unit={unit} />
             </section>
           </div>
         )}
