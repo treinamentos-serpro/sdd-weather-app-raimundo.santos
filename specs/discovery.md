@@ -29,14 +29,48 @@ A empresa solicita uma aplicação de previsão do tempo para que usuários cons
 
 ## Perguntas em Aberto
 
-1. Qual fonte de dados meteorológicos será utilizada e quais são seus limites de disponibilidade e atualização?
-2. Como o usuário deve distinguir cidades homônimas (por exemplo, por estado, região ou país)?
-3. Quais informações devem aparecer no clima atual e em cada dia da previsão?
-4. Os cinco dias incluem o dia atual ou correspondem aos cinco dias seguintes?
-5. Qual deve ser a unidade inicial: Celsius ou Fahrenheit? A escolha deve ser mantida entre visitas?
-6. Quais idiomas, regiões e formatos de data devem ser suportados?
-7. Há metas de desempenho, requisitos de acessibilidade ou navegadores e dispositivos mínimos a atender?
-8. A aplicação deve oferecer recursos adicionais, como geolocalização, cidades favoritas ou consulta sem conexão?
+O briefing define capacidades gerais, mas não os critérios de conteúdo, operação e sucesso necessários para fechar o escopo. Para cada pergunta, o impacto abaixo descreve o risco de avançar sem uma decisão.
+
+### Produto e público
+
+1. **Quem são os usuários prioritários e em que situações consultarão o app?** Impacto: sem conhecer o público e suas tarefas, não é possível priorizar informações, fluxos ou critérios de sucesso.
+2. **Qual resultado de negócio define o sucesso do produto e como será medido?** Impacto: a equipe pode entregar funcionalidades sem saber se resolvem a necessidade da empresa ou dos usuários.
+3. **Alertas de tempo severo fazem parte do escopo ou o produto cobre apenas condições atuais e previsão regular?** Impacto: usuários podem esperar avisos críticos que não existem, e alertas exigem fontes, regras e responsabilidades adicionais.
+
+### Busca e localização
+
+4. **Quais países ou regiões devem ser cobertos pela busca?** Impacto: a cobertura geográfica e a qualidade dos resultados podem não atender ao público esperado.
+5. **Como o usuário pesquisa e seleciona uma cidade: texto livre, sugestões enquanto digita ou outra interação?** Impacto: a equipe pode implementar um fluxo inadequado, especialmente em telas pequenas.
+6. **Quais informações identificam uma cidade nos resultados, como estado, região ou país, e como tratar homônimos?** Impacto: o usuário pode selecionar um local incorreto e receber dados irrelevantes.
+7. **O que deve ocorrer quando não há resultados, a busca falha ou o serviço está indisponível?** Impacto: não será possível definir estados vazios, mensagens ou recuperação, deixando o usuário sem orientação.
+8. **A seleção de cidade é sempre manual ou são esperadas geolocalização, cidade padrão, histórico ou favoritos?** Impacto: decisões sobre permissões, persistência, privacidade e escopo podem surgir tarde e alterar a arquitetura.
+
+### Informações meteorológicas
+
+9. **Quais campos devem aparecer no clima atual e em cada dia da previsão?** Impacto: conteúdo, layout, fonte de dados e critérios de aceite permanecem indefinidos.
+10. **O que significa “previsão de 5 dias”: inclui hoje ou os cinco dias completos seguintes?** Impacto: datas, quantidade de itens e expectativas do usuário podem divergir.
+11. **A previsão deve ser diária ou incluir intervalos horários?** Impacto: muda substancialmente a quantidade de dados, a interface e possivelmente o custo de acesso à fonte.
+12. **Qual fuso horário e limite de dia serão usados para apresentar datas e condições locais?** Impacto: dias da previsão podem aparecer deslocados, sobretudo para usuários em outro fuso.
+13. **Com que frequência os dados devem ser atualizados e qual idade máxima ainda é aceitável?** Impacto: sem esse limite, dados desatualizados podem ser apresentados como atuais e não há critério para cache.
+14. **A alternância Celsius/Fahrenheit se aplica somente à temperatura? Quais unidades serão usadas para vento, precipitação e outros campos, se exibidos?** Impacto: usuários podem ver unidades inconsistentes ou não compreender os valores.
+15. **Qual unidade deve ser selecionada inicialmente e a preferência deve persistir entre visitas ou dispositivos?** Impacto: a experiência inicial e as regras de armazenamento ficam sujeitas a interpretações diferentes.
+
+### Plataforma e qualidade
+
+16. **“Usar em dispositivos móveis” significa um site responsivo, um app instalável (PWA), aplicativos nativos ou mais de uma opção?** Impacto: a decisão muda tecnologia, distribuição, custo e o que significa considerar a experiência mobile atendida.
+17. **Quais tamanhos de tela, sistemas operacionais, navegadores e orientações devem ser suportados?** Impacto: não há uma matriz objetiva de compatibilidade para design e testes.
+18. **Qual padrão ou nível de acessibilidade deve ser atendido?** Impacto: acessibilidade pode ser aplicada de modo inconsistente e ser descoberta tarde, quando corrigir controles e estrutura é mais caro.
+19. **Quais são as metas de performance para busca e carregamento das informações?** Impacto: não há critério para avaliar lentidão nem para decidir sobre otimização ou cache.
+20. **Qual disponibilidade é esperada e o que deve acontecer quando a fonte de dados falhar?** Impacto: não é possível definir metas de confiabilidade, degradação, mensagens ou contingência.
+21. **O app deve funcionar sem conexão ou exibir dados armazenados anteriormente?** Impacto: suporte offline altera armazenamento, política de validade e como comunicar a idade dos dados.
+22. **Quais idiomas, formatos de data/hora e convenções regionais serão necessários?** Impacto: textos, unidades, datas e formatos podem não corresponder à localização dos usuários.
+
+### Dados, privacidade e operação
+
+23. **Qual fonte de dados será usada e quais são seus limites de cobertura, atualização, licença, custo e requisições?** Impacto: a solução pode exceder limites, não cobrir regiões necessárias ou não ser viável para distribuição.
+24. **A aplicação coletará localização, histórico de busca, preferências ou métricas de uso? Por quanto tempo e para qual finalidade?** Impacto: sem definição, privacidade, consentimento, retenção e requisitos legais ficam sem tratamento adequado.
+25. **Existem requisitos de segurança, retenção de dados ou políticas corporativas que precisam ser atendidos?** Impacto: restrições descobertas tardiamente podem exigir mudanças no desenho e atrasar a entrega.
+26. **Quem será responsável por monitorar falhas, limites da fonte e qualidade dos dados após o lançamento?** Impacto: problemas de produção podem ficar sem detecção ou sem responsável por resolvê-los.
 
 ## Suposições
 
