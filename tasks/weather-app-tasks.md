@@ -7,7 +7,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-01 — Definir temperatura da previsão diária
 
 - **Descrição:** decidir se a temperatura diária apresentada será máxima, mínima ou média e registrar o campo Open-Meteo correspondente.
-- **Critérios de aceite:** a decisão está registrada na spec e no plano; `daily_temperature_field` foi substituído pelo campo escolhido; AC-07 e fixtures podem ser implementados sem ambiguidade.
+- **Critérios de aceite:** spec e plano identificam uma única estatística (máxima, mínima ou média) e seu campo Open-Meteo; `daily_temperature_field` é substituído pelo nome exato; exemplo e AC-07 usam essa mesma estatística.
 - **Rastreabilidade:** FR-03, AC-07.
 - **Dependências:** nenhuma.
 - **Arquivos prováveis:** `specs/weather-app-spec.md`, `plans/weather-app-plan.md`.
@@ -16,7 +16,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-02 — Aprovar mapeamento de condições WMO
 
 - **Descrição:** definir descrições pt-BR para os códigos WMO utilizados e o fallback para códigos desconhecidos.
-- **Critérios de aceite:** tabela e fallback estão documentados e revisados; códigos conhecidos têm rótulos esperados para clima atual e previsão.
+- **Critérios de aceite:** tabela documenta os códigos WMO cobertos pela referência com rótulos pt-BR; um código não mapeado tem fallback explícito; spec e plano usam a mesma tabela e fallback.
 - **Rastreabilidade:** FR-02, FR-03, AC-06, AC-07, Open Question 6.
 - **Dependências:** nenhuma.
 - **Arquivos prováveis:** `specs/weather-app-spec.md`, `plans/weather-app-plan.md`.
@@ -25,7 +25,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-03 — Confirmar viabilidade da Open-Meteo
 
 - **Descrição:** validar cobertura, CORS, limites, licença, atribuição e condições de uso para os ambientes previstos.
-- **Critérios de aceite:** evidências e decisão de uso estão registradas; restrições relevantes viram critérios ou riscos explícitos antes de integrar a API.
+- **Critérios de aceite:** checklist registra evidência de cobertura, CORS nos ambientes alvo, limites, licença, atribuição e condições de uso; decisão go/no-go e restrições constam no plano antes da integração.
 - **Rastreabilidade:** NFR-06, Risk de cobertura/limites/licença da Open-Meteo.
 - **Dependências:** nenhuma.
 - **Arquivos prováveis:** `plans/weather-app-plan.md`.
@@ -34,7 +34,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-04 — Aprovar estratégia de observabilidade
 
 - **Descrição:** definir como falhas e disponibilidade serão monitoradas sem violar a restrição de privacidade/telemetria da spec.
-- **Critérios de aceite:** mecanismo, dados coletados, retenção e responsável operacional estão documentados; a solução não registra termos de busca ou dados pessoais sem aprovação.
+- **Critérios de aceite:** mecanismo, eventos/campos, retenção, acesso e responsável estão documentados; cada campo tem finalidade aprovada; nenhum termo de busca ou dado pessoal é coletado sem finalidade, aviso e retenção aprovados.
 - **Rastreabilidade:** NFR-05, NFR-06.
 - **Dependências:** nenhuma.
 - **Arquivos prováveis:** `specs/weather-app-spec.md`, `plans/weather-app-plan.md`.
@@ -45,7 +45,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-05 — Criar tipos de domínio e DTOs
 
 - **Descrição:** definir contratos TypeScript para `Unit`, `City`, `WeatherCondition`, `CurrentWeather`, `ForecastDay`, `WeatherData`, erros e payloads mínimos Open-Meteo.
-- **Critérios de aceite:** os tipos refletem os campos aprovados em T-01/T-02; campos opcionais ou ausentes não são representados por valores inventados; TypeScript strict compila.
+- **Critérios de aceite:** `weather.ts` exporta os contratos de domínio e `openMeteo.ts` os DTOs usados pelos dois endpoints; campos opcionais e `null` seguem o plano; `pnpm build` termina sem erro de tipo.
 - **Rastreabilidade:** FR-01 a FR-04, AC-03, AC-05 a AC-07, AC-10 a AC-12, AC-15.
 - **Dependências:** T-01, T-02, T-03.
 - **Arquivos prováveis:** `src/types/weather.ts`, `src/types/openMeteo.ts`.
@@ -54,7 +54,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-06 — Mapear códigos WMO
 
 - **Descrição:** implementar uma função pura para converter códigos de condição aprovados em rótulos pt-BR.
-- **Critérios de aceite:** códigos aprovados retornam os rótulos definidos em T-02; código desconhecido usa o fallback aprovado sem lançar erro.
+- **Critérios de aceite:** cada código da tabela de T-02 retorna exatamente o rótulo pt-BR aprovado; código não mapeado retorna exatamente o fallback aprovado sem lançar exceção.
 - **Rastreabilidade:** FR-02, FR-03, AC-06, AC-07.
 - **Dependências:** T-02, T-05.
 - **Arquivos prováveis:** `src/lib/weatherCode.ts`.
@@ -63,7 +63,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-07 — Mapear payloads para o domínio
 
 - **Descrição:** mapear payloads válidos de geocoding e forecast para `City` e `WeatherData`, preservando coordenadas, datas locais e ausências.
-- **Critérios de aceite:** cidade e dados meteorológicos correspondem ao payload; campos opcionais ausentes não são inventados; campos meteorológicos ausentes são `null`; payload malformado não é aceito como válido.
+- **Critérios de aceite:** fixtures conhecidas produzem valores de domínio correspondentes; campos opcionais ausentes não são inventados; campos meteorológicos ausentes viram `null`; estrutura incompatível não retorna sucesso.
 - **Rastreabilidade:** FR-01 a FR-03, AC-03, AC-05 a AC-10, AC-15.
 - **Dependências:** T-05, T-06.
 - **Arquivos prováveis:** `src/lib/weatherMapper.ts`.
@@ -72,7 +72,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-08 — Implementar conversão de temperatura
 
 - **Descrição:** criar função pura para derivar valores de apresentação a partir de Celsius e da unidade selecionada.
-- **Critérios de aceite:** `null` permanece indisponível; Fahrenheit aplica fórmula e arredondamento de AC-12; entrada em Celsius não é mutada.
+- **Critérios de aceite:** `null` retorna `null`; Celsius retorna o valor de entrada; 0 °C retorna 32 °F e 100 °C retorna 212 °F; empates arredondam para longe de zero; entrada não é mutada.
 - **Rastreabilidade:** FR-04, AC-11, AC-12.
 - **Dependências:** T-05.
 - **Arquivos prováveis:** `src/lib/temperature.ts`.
@@ -81,7 +81,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-09 — Implementar serviço de geocoding
 
 - **Descrição:** encapsular a busca Open-Meteo e validar sua resposta antes de retornar cidades normalizadas.
-- **Critérios de aceite:** usa os parâmetros aprovados; resposta válida sem resultados é distinta de erro; rede, HTTP, API, timeout e payload inválido retornam erros tipados; timeout é 10 s, sem retry automático.
+- **Critérios de aceite:** request envia `name` com query trimada, `count=10`, `language=pt` e `format=json`; 2xx válido sem resultados retorna `empty`; rede, HTTP não-2xx, envelope de erro, timeout de 10 s e payload malformado retornam categorias distintas; não há retry automático.
 - **Rastreabilidade:** FR-01, FR-05, AC-01 a AC-04, AC-08, AC-09, AC-13.
 - **Dependências:** T-03, T-05, T-07.
 - **Arquivos prováveis:** `src/services/openMeteoService.ts`.
@@ -90,7 +90,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-10 — Implementar serviço de forecast
 
 - **Descrição:** consultar clima atual e previsão diária de cinco dias para as coordenadas da cidade selecionada.
-- **Critérios de aceite:** request usa Celsius, timezone local e o campo diário aprovado em T-01; resposta mapeia para `WeatherData`; campos parciais e erros seguem os contratos; resposta inválida não vira sucesso.
+- **Critérios de aceite:** request usa coordenadas selecionadas, Celsius, `timezone=auto`, `forecast_days=5`, variáveis `current` e `daily` aprovadas; fixture válida mapeia para cinco datas; campos ausentes viram `null`; erro ou estrutura inválida não retorna sucesso.
 - **Rastreabilidade:** FR-02, FR-03, FR-05, AC-05 a AC-10, AC-13, AC-15.
 - **Dependências:** T-01 a T-07, T-09.
 - **Arquivos prováveis:** `src/services/openMeteoService.ts`.
@@ -101,7 +101,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-11 — Criar estilos globais e base responsiva
 
 - **Descrição:** preparar estilos globais Tailwind alinhados ao tema dark glassmorphism e aos viewports definidos.
-- **Critérios de aceite:** estilos globais podem ser importados pela aplicação; conteúdo não exige rolagem horizontal a 320 px; foco visível permanece legível no tema.
+- **Critérios de aceite:** `src/index.css` contém as diretivas Tailwind e regras globais do tema; regra de foco visível está definida; build Vite aceita o CSS importado.
 - **Rastreabilidade:** NFR-01, NFR-02.
 - **Dependências:** nenhuma.
 - **Arquivos prováveis:** `src/index.css`.
@@ -110,7 +110,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-12 — Orquestrar estado e ações no hook
 
 - **Descrição:** implementar busca, seleção, consulta, retry e unidade em `useWeatherApp` com estados independentes de busca e clima.
-- **Critérios de aceite:** estados `idle/loading/success/error` existem para operações; `empty` é exclusivo da busca; nova seleção limpa clima anterior e respostas obsoletas não sobrescrevem a cidade atual; alterar unidade não chama serviços.
+- **Critérios de aceite:** busca e clima expõem `idle/loading/success/error`, e só busca expõe `empty`; busca vazia preserva seleção/clima; nova seleção limpa clima e resposta antiga não sobrescreve a atual; retry repete os mesmos parâmetros; unidade não invoca serviço.
 - **Rastreabilidade:** FR-01 a FR-05, AC-01, AC-04, AC-05, AC-08, AC-11 a AC-13.
 - **Dependências:** T-05 a T-10.
 - **Arquivos prováveis:** `src/hooks/useWeatherApp.ts`.
@@ -119,7 +119,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-13 — Criar componente de busca
 
 - **Descrição:** implementar campo de busca, lista de cidades, seleção e estados vazio/erro/carregamento.
-- **Critérios de aceite:** input vazio não envia request; resultados mostram os campos geográficos disponíveis; seleção dispara o callback do resultado correto; vazio, erro e loading são distinguíveis e acessíveis.
+- **Critérios de aceite:** input vazio não chama `onSearch`; cada resultado mostra nome e campos geográficos disponíveis; selecionar chama `onSelect` com o item escolhido; loading, vazio e erro têm conteúdo/status acessíveis distintos.
 - **Rastreabilidade:** FR-01, FR-05, AC-01 a AC-04, AC-08, AC-09, AC-13, AC-14, NFR-01/02.
 - **Dependências:** T-12.
 - **Arquivos prováveis:** `src/components/CitySearch.tsx`.
@@ -128,7 +128,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-14 — Criar componente de clima atual
 
 - **Descrição:** apresentar local selecionado, temperatura e condição atuais.
-- **Critérios de aceite:** exibe dados apenas do local selecionado; campos `null` aparecem como indisponíveis; unidade e textos seguem AC-06/10/14.
+- **Critérios de aceite:** sucesso exibe local, temperatura e condição das props; `null` exibe indisponibilidade; loading/erro não exibem dados anteriores; unidade e textos correspondem às props/AC-14.
 - **Rastreabilidade:** FR-02, AC-05, AC-06, AC-08, AC-10, AC-14, NFR-01/02/04.
 - **Dependências:** T-08, T-12.
 - **Arquivos prováveis:** `src/components/CurrentWeather.tsx`.
@@ -137,7 +137,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-15 — Criar componente de previsão
 
 - **Descrição:** apresentar a previsão diária em grupos por data local.
-- **Critérios de aceite:** renderiza as cinco datas em ordem; exibe temperatura/condição ou indisponibilidade por campo; não usa o timezone do dispositivo.
+- **Critérios de aceite:** com cinco dias válidos, renderiza exatamente cinco datas em ordem; `null` exibe indisponibilidade; timezone inválido mostra estado indisponível e não usa timezone do dispositivo.
 - **Rastreabilidade:** FR-03, AC-05, AC-07, AC-10, AC-14, AC-15, NFR-01/02/04.
 - **Dependências:** T-08, T-12.
 - **Arquivos prováveis:** `src/components/Forecast.tsx`.
@@ -146,7 +146,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-16 — Criar controle de unidade
 
 - **Descrição:** criar controle acessível para selecionar Celsius ou Fahrenheit.
-- **Critérios de aceite:** expõe unidade selecionada e emite mudança via callback; é operável por teclado e identifica as opções; não faz chamada de dados.
+- **Critérios de aceite:** identifica Celsius/Fahrenheit e opção selecionada; teclado altera opção e callback recebe `Unit` correto; interação não invoca serviço de dados.
 - **Rastreabilidade:** FR-04, AC-11, AC-12, NFR-01/02/04.
 - **Dependências:** T-12.
 - **Arquivos prováveis:** `src/components/UnitToggle.tsx`.
@@ -155,7 +155,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-17 — Compor a tela principal
 
 - **Descrição:** conectar hook e componentes por props/callbacks.
-- **Critérios de aceite:** a tela exibe estados e dados providos pelo hook; nenhum componente chama serviços diretamente; compilação passa.
+- **Critérios de aceite:** `App` conecta hook e componentes somente por props/callbacks; cada estado aparece no componente correspondente; `components/` não importa serviços; `pnpm build` termina com código 0.
 - **Rastreabilidade:** FR-01 a FR-05, AC-01 a AC-15.
 - **Dependências:** T-12 a T-16.
 - **Arquivos prováveis:** `src/App.tsx`.
@@ -164,7 +164,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-18 — Conectar entrada React/Vite
 
 - **Descrição:** montar a aplicação React no ponto de entrada do Vite e carregar os estilos globais.
-- **Critérios de aceite:** `pnpm dev` carrega `App` e estilos; não há erro no console ao iniciar.
+- **Critérios de aceite:** `pnpm dev` inicia a rota principal e renderiza `App` com estilos globais; console do browser não apresenta erro de inicialização.
 - **Rastreabilidade:** FR-01 a FR-05, NFR-01.
 - **Dependências:** T-11, T-17.
 - **Arquivos prováveis:** `src/main.tsx`.
