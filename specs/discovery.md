@@ -19,13 +19,20 @@ A empresa solicita uma aplicação de previsão do tempo para que usuários cons
 
 ## Riscos
 
-| Risco | Impacto potencial |
-| --- | --- |
-| Cidades com nomes iguais ou semelhantes | O usuário pode consultar a previsão de um local diferente do pretendido. |
-| Indisponibilidade ou atraso na fonte de dados meteorológicos | Informações podem não carregar ou estar desatualizadas. |
-| Definição ambígua do período de cinco dias | Usuários podem interpretar de forma diferente quais datas estão incluídas. |
-| Conversão ou apresentação incorreta de unidades | A temperatura exibida pode induzir o usuário a uma interpretação errada. |
-| Layout ou controles inadequados em telas móveis | A consulta pode ficar difícil em dispositivos que fazem parte do escopo. |
+As probabilidades são estimativas iniciais, pois ainda não há fonte de dados, público-alvo ou metas de qualidade definidos.
+
+| Risco | Probabilidade | Impacto | Estratégia de mitigação |
+| --- | --- | --- | --- |
+| Indisponibilidade, limite de requisições ou mudança na API meteorológica | Média | Alto: clima atual e previsão podem deixar de carregar. | Avaliar cobertura, limites, licença e SLA antes da escolha; tratar falhas e timeouts; monitorar erros e definir resposta degradada ou alternativa. |
+| Dados incompletos, atrasados ou inconsistentes para a cidade escolhida | Média | Alto: o usuário pode tomar decisões com informação incorreta ou desatualizada. | Definir requisitos de cobertura e atualização; validar e indicar horário da última atualização; comunicar ausência de dados em vez de apresentar valores como atuais. |
+| Cidades homônimas ou resultados geográficos imprecisos | Alta | Médio: previsão de um local diferente do pretendido. | Exibir contexto suficiente (estado/região e país), permitir confirmação explícita e validar coordenadas retornadas pela fonte. |
+| Escopo indefinido de “cinco dias” e dos campos da previsão | Alta | Alto: retrabalho de produto e interface, além de divergência com a expectativa do usuário. | Decidir se o período inclui hoje, granularidade e campos antes de fechar a especificação e validar a interpretação com usuários ou stakeholders. |
+| Conversão ou rotulagem incorreta de Celsius/Fahrenheit | Média | Alto: temperaturas podem ser interpretadas incorretamente. | Definir unidade padrão e persistência; centralizar conversões; testar valores de referência, arredondamento e consistência em todas as telas. |
+| Experiência incompatível com alguns dispositivos, navegadores ou tecnologias assistivas | Média | Alto: parte dos usuários pode não conseguir consultar ou operar o app. | Definir matriz de suporte e critérios responsivos/acessíveis; testar teclado, leitor de tela e viewports representativos antes do lançamento. |
+| Ausência de metas de performance e disponibilidade | Média | Alto: lentidão ou interrupções podem prejudicar o uso sem serem detectadas como falhas contra um objetivo acordado. | Estabelecer metas mensuráveis; medir busca e carregamento ponta a ponta; monitorar disponibilidade e definir estados de erro, retry e eventual cache com validade explícita. |
+| Público prioritário e critério de sucesso não definidos | Alta | Alto: o produto pode ser entregue sem resolver a necessidade principal ou sem forma de avaliar o resultado. | Identificar usuários e tarefas prioritárias; acordar métricas de sucesso e validar protótipos/fluxos antes de ampliar o escopo. |
+| Expectativa de recursos não confirmados, como alertas severos, geolocalização ou uso offline | Média | Médio: frustração dos usuários e expansão tardia de escopo, dados e responsabilidades. | Declarar explicitamente o que entra e o que não entra na primeira versão; validar expectativas com stakeholders e comunicar limites do produto. |
+| Coleta ou armazenamento de localização e preferências sem requisitos de privacidade definidos | Baixa a média | Alto: risco de uso de dados além do necessário, perda de confiança ou necessidade de mudanças para cumprir políticas aplicáveis. | Minimizar dados; só solicitar localização se aprovada; definir finalidade, consentimento, retenção e controles com as áreas responsáveis antes da implementação. |
 
 ## Perguntas em Aberto
 
