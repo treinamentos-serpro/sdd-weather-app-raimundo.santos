@@ -29,11 +29,11 @@ Aplicação web de consulta meteorológica que permite pesquisar e selecionar um
 
 ## User Stories
 
-- **US-01 (FR-01):** Como Ana, quero pesquisar e selecionar uma cidade para consultar o clima do local correto.
-- **US-02 (FR-02):** Como Ana, quero ver as condições atuais da cidade selecionada para decidir como me preparar para o dia.
-- **US-03 (FR-03):** Como Caio, quero ver a previsão de hoje e dos quatro dias seguintes para planejar os próximos dias.
-- **US-04 (FR-04):** Como Lúcia, quero alternar entre Celsius e Fahrenheit para entender as temperaturas sem conversão manual.
-- **US-05 (FR-05):** Como usuário, quero saber quando uma busca ou consulta está carregando, não encontrou dados ou falhou para entender o que aconteceu.
+- **US-01 (FR-01):** Como Ana, que decide a rotina, quero pesquisar e selecionar uma cidade para consultar o clima do local correto.
+- **US-02 (FR-02):** Como Ana, que decide a rotina, quero ver as condições atuais da cidade selecionada para decidir como me preparar para o dia.
+- **US-03 (FR-03):** Como Caio, que planeja os próximos dias, quero ver a previsão de hoje e dos quatro dias seguintes para planejar atividades ou deslocamentos.
+- **US-04 (FR-04):** Como Lúcia, que prefere Fahrenheit, quero alternar entre Celsius e Fahrenheit para entender as temperaturas sem conversão manual.
+- **US-05 (FR-05):** Como Caio, que planeja os próximos dias, quero saber quando uma busca ou consulta está carregando, não encontrou dados ou falhou para entender o estado da consulta.
 
 ## Acceptance Criteria
 
