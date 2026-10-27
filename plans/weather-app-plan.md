@@ -169,7 +169,7 @@ Exemplo resumido de resposta:
 }
 ```
 
-Mapeamento para `City`: `id` vira string estável; `name`, `latitude` e `longitude` são obrigatórios; `admin1`, `country`, `country_code` e `timezone` viram `admin1`, `country`, `countryCode` e `timeZone` opcionais. Não sintetizar valores geográficos ausentes. Resposta válida sem `results` ou com lista vazia vira estado `empty` (AC-03/04); estrutura inválida vira `invalid-response`.
+Mapeamento para `City`: `id` vira string estável; `name`, `latitude` e `longitude` são obrigatórios; `admin1`, `country`, `country_code` e `timezone` viram `admin1`, `country`, `countryCode` e `timeZone` opcionais. Não sintetizar valores geográficos ausentes. Resposta 2xx válida sem `results` ou com lista vazia vira estado `empty` (AC-03/04); conteúdo malformado vira `invalid-response`.
 
 ### Forecast
 
@@ -242,7 +242,7 @@ Se o valor for `null`, a função retorna `null` e a UI exibe “indisponível�
 - **Timeout:** usar limite de 10 s por solicitação. Cancelar a solicitação com `AbortController`, definir `error.kind='timeout'`, encerrar loading e oferecer retry manual; timeout não é `empty`.
 - **Resposta inválida:** JSON ilegível ou estrutura incompatível com o contrato produz `error.kind='invalid-response'`; não tratar como lista vazia nem como resposta parcial.
 - **Resposta parcial válida:** manter `status='success'`; mapear somente os campos ausentes para `null`, renderizar “indisponível” para eles e manter os campos válidos. Não inventar ou reutilizar valores anteriores (AC-10).
-- **Busca sem resultados:** geocoding 2xx com `results` vazio produz `search.status='empty'`; preservar a seleção e o clima atuais, sem iniciar forecast (AC-04).
+- **Busca sem resultados:** geocoding 2xx válido com `results` ausente ou lista vazia produz `search.status='empty'`; preservar a seleção e o clima atuais, sem iniciar forecast (AC-04).
 - **Falha meteorológica após nova seleção:** preservar o identificador da nova cidade, manter `weather.status='error'` e não restaurar dados da cidade anterior (AC-05/08).
 - **Retry:** somente após ação explícita; repetir os mesmos parâmetros para a operação que falhou, sem retry automático (AC-08/09/13).
 - **Fuso ausente/inválido:** previsão em estado de indisponibilidade, sem usar o fuso do dispositivo (AC-15).
