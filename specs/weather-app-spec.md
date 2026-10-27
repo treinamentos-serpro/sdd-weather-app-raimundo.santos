@@ -2,184 +2,146 @@
 
 ## Overview
 
-Aplicação web de consulta meteorológica que permite pesquisar e selecionar uma cidade, consultar suas condições atuais e a previsão para cinco dias, e alternar a unidade de temperatura entre Celsius e Fahrenheit. A interface principal será em pt-BR e deve ser utilizável em dispositivos móveis e desktop.
+Aplicação web em pt-BR para pesquisar uma cidade, consultar clima atual e previsão diária de hoje mais quatro dias e alternar temperaturas entre Celsius e Fahrenheit. A primeira versão é sem conta, com seleção manual de local e uso em dispositivos móveis e desktop.
 
-**Objetivos da primeira versão**
-
-- Ajudar o usuário a encontrar dados meteorológicos da cidade pretendida.
-- Apresentar clima atual e uma previsão que cubra hoje e os quatro dias seguintes.
-- Permitir interpretar temperaturas na unidade escolhida, com Celsius como padrão inicial.
-- Comunicar estados de carregamento, ausência de resultados e falhas sem apresentar dados indisponíveis como atuais.
-
-**Personas de referência (hipóteses a validar)**
-
-- **Ana, que decide a rotina:** consulta o clima atual, principalmente pelo celular.
-- **Caio, que planeja os próximos dias:** consulta a previsão para organizar atividades.
-- **Lúcia, que prefere Fahrenheit:** precisa ler temperaturas na unidade com que está familiarizada.
-
-**Fonte de dados definida:** Open-Meteo, sem API key. Cobertura, limites, atualização, licença e condições de uso ainda precisam ser confirmados.
+Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina), Caio (planeja os próximos dias) e Lúcia (prefere Fahrenheit). Fonte meteorológica escolhida: Open-Meteo, sem API key; sua cobertura e condições de uso precisam ser aprovadas antes do lançamento.
 
 ## Functional Requirements
 
-- **FR-01 — Buscar e selecionar uma cidade:** o usuário deve poder pesquisar uma cidade e selecionar o local desejado. Resultados devem mostrar cidade, região administrativa e país para distinguir locais homônimos. Critérios: AC-01, AC-02, AC-09, AC-12 e AC-13.
-- **FR-02 — Consultar o clima atual:** após a seleção de uma cidade, o sistema deve exibir, no mínimo, temperatura e condição meteorológica atuais para esse local. Critérios: AC-03, AC-04 e AC-15.
-- **FR-03 — Consultar previsão de cinco dias:** para a cidade selecionada, o sistema deve exibir a previsão de hoje e dos quatro dias seguintes, organizada por data, com no mínimo temperatura e condição meteorológica em cada data. A inclusão de intervalos horários permanece em aberto. Critérios: AC-05 e AC-15.
-- **FR-04 — Alternar unidade de temperatura:** o usuário deve poder alternar entre Celsius e Fahrenheit; Celsius é a unidade inicial. A seleção deve ser aplicada consistentemente a todas as temperaturas exibidas. Critérios: AC-06 e AC-07.
-- **FR-05 — Comunicar estados da consulta:** durante busca e carregamento meteorológico, o sistema deve indicar que a operação está em andamento. Se a busca não retornar cidades ou a consulta meteorológica falhar ou exceder o tempo limite, deve informar o estado sem apresentar a consulta como bem-sucedida. Critérios: AC-08, AC-09, AC-10 e AC-14.
+- **FR-01 — Buscar e selecionar cidade:** aceitar uma busca manual enviada pelo usuário, apresentar resultados identificáveis e permitir selecionar um local. Critérios: AC-01 a AC-05.
+- **FR-02 — Consultar clima atual:** para o local selecionado, exibir temperatura e condição meteorológica, com unidade e local identificados. Critérios: AC-05, AC-06, AC-08 e AC-10.
+- **FR-03 — Consultar previsão:** exibir uma previsão diária para hoje e os quatro dias seguintes, segundo as datas locais do local selecionado. Critérios: AC-05, AC-07, AC-08, AC-10 e AC-15.
+- **FR-04 — Alternar unidade:** permitir alternar entre Celsius e Fahrenheit; usar Celsius como padrão e aplicar a seleção a todas as temperaturas visíveis. Critérios: AC-11 e AC-12.
+- **FR-05 — Comunicar estados:** indicar carregamento, ausência de resultados, falha e timeout de forma distinta; permitir tentativa manual após falha. Critérios: AC-01, AC-04, AC-08, AC-09 e AC-13.
 
 ## User Stories
 
 - **US-01 (FR-01):** Como Ana, que decide a rotina, quero pesquisar e selecionar uma cidade para consultar o clima do local correto.
-- **US-02 (FR-02):** Como Ana, que decide a rotina, quero ver as condições atuais da cidade selecionada para decidir como me preparar para o dia.
-- **US-03 (FR-03):** Como Caio, que planeja os próximos dias, quero ver a previsão de hoje e dos quatro dias seguintes para planejar atividades ou deslocamentos.
-- **US-04 (FR-04):** Como Lúcia, que prefere Fahrenheit, quero alternar entre Celsius e Fahrenheit para entender as temperaturas sem conversão manual.
-- **US-05 (FR-05):** Como Caio, que planeja os próximos dias, quero saber quando uma busca ou consulta está carregando, não encontrou dados ou falhou para entender o estado da consulta.
+- **US-02 (FR-02):** Como Ana, que decide a rotina, quero consultar as condições atuais para decidir como me preparar para o dia.
+- **US-03 (FR-03):** Como Caio, que planeja os próximos dias, quero ver a previsão de hoje e dos quatro dias seguintes para planejar atividades.
+- **US-04 (FR-04):** Como Lúcia, que prefere Fahrenheit, quero alternar a unidade de temperatura para entender os valores sem conversão manual.
+- **US-05 (FR-05):** Como Caio, que planeja os próximos dias, quero distinguir carregamento, ausência de resultados e falha para saber se devo tentar novamente.
 
 ## Acceptance Criteria
 
-- **AC-01 (FR-01) — Identificação dos resultados:**
-	- **Given** que a busca retorna duas cidades homônimas em regiões administrativas ou países diferentes
-	- **When** os resultados da busca são exibidos
-	- **Then** cada resultado mostra o nome da cidade, a região administrativa e o país retornados para aquele local
-- **AC-02 (FR-01) — Seleção da cidade:**
-	- **Given** que os resultados da busca contêm a cidade pretendida
-	- **When** o usuário seleciona um resultado
-	- **Then** a cidade selecionada, incluindo região administrativa e país, é identificada na consulta e os dados exibidos correspondem ao resultado selecionado
-- **AC-03 (FR-02) — Exibição do clima atual:**
-	- **Given** que existe uma cidade selecionada e uma resposta meteorológica atual bem-sucedida com temperatura e condição
-	- **When** o carregamento dessa resposta termina
-	- **Then** a interface exibe para a cidade selecionada a temperatura e a condição contidas na resposta
-- **AC-04 (FR-02) — Falha ao obter clima atual:**
-	- **Given** que a consulta do clima atual da cidade selecionada falha ou excede o tempo limite
-	- **When** o sistema conclui que a consulta não pode ser apresentada como bem-sucedida
-	- **Then** a interface exibe um estado de falha e não apresenta dados ausentes como clima atual disponível
-- **AC-05 (FR-03) — Previsão de cinco dias:**
-	- **Given** que a cidade selecionada possui uma resposta de previsão bem-sucedida para hoje e os quatro dias seguintes, segundo as datas locais dessa cidade
-	- **When** a previsão é exibida
-	- **Then** são apresentados cinco grupos de datas locais consecutivas em ordem cronológica, começando em hoje, e cada grupo mostra ao menos uma temperatura e uma condição meteorológica daquela data
-- **AC-06 (FR-04) — Unidade inicial:**
-	- **Given** que não há unidade escolhida anteriormente na sessão atual
-	- **When** temperaturas do clima atual ou da previsão são exibidas
-	- **Then** todas são apresentadas em Celsius e identificadas com °C
-- **AC-07 (FR-04) — Alternância de unidade:**
-	- **Given** que o clima atual e a previsão contêm temperaturas conhecidas, incluindo 0 °C e 100 °C
-	- **When** o usuário seleciona Fahrenheit
-	- **Then** todas as temperaturas visíveis do clima atual e da previsão são identificadas com °F, 0 °C é apresentado como 32 °F e 100 °C como 212 °F
-	- **When** o usuário seleciona Celsius novamente
-	- **Then** todas as temperaturas visíveis são identificadas com °C e retornam aos valores Celsius correspondentes
-- **AC-08 (FR-05) — Carregamento:**
-	- **Given** que uma busca de cidade ou consulta meteorológica foi iniciada e ainda não recebeu resposta
-	- **When** a operação permanece pendente
-	- **Then** a interface apresenta um indicador visível de carregamento associado à operação pendente
-- **AC-09 (FR-05) — Busca sem resultados:**
-	- **Given** que a busca de cidade termina com sucesso e retorna uma lista vazia
-	- **When** a interface apresenta o resultado da busca
-	- **Then** é exibido um estado de ausência de resultados, distinto do estado de falha, nenhuma cidade é selecionada e nenhuma consulta meteorológica é iniciada
-- **AC-10 (FR-05) — Falha de API:**
-	- **Given** que a busca de cidade ou a consulta meteorológica retorna uma falha do serviço
-	- **When** a operação termina sem uma resposta bem-sucedida
-	- **Then** é exibido um estado de erro distinto do estado sem resultados, nenhum dado inexistente é apresentado como resultado atual e uma ação para tentar novamente é disponibilizada
-- **AC-11 — Idioma:**
-	- **Given** que a interface está carregada
-	- **When** textos de busca, estados e consulta meteorológica são exibidos
-	- **Then** esses textos estão em pt-BR
-- **AC-12 (FR-01) — Input vazio:**
-	- **Given** que o campo de busca está vazio ou contém somente espaços
-	- **When** o usuário envia a busca
-	- **Then** a aplicação não inicia uma consulta de geocodificação e informa que é necessário digitar uma cidade
-- **AC-13 (FR-01) — Caracteres especiais:**
-	- **Given** que o usuário pesquisa um nome de cidade com letras acentuadas, espaços internos, hífen ou apóstrofo
-	- **When** a busca é enviada e retorna um resultado correspondente
-	- **Then** os caracteres significativos da consulta são preservados na busca e o nome exibido corresponde ao nome retornado para o resultado selecionável
-- **AC-14 (FR-05) — Timeout:**
-	- **Given** que a busca ou consulta meteorológica permanece sem resposta até exceder o limite de tempo configurado
-	- **When** o timeout é atingido
-	- **Then** o carregamento termina, é exibida uma mensagem de falha com ação para tentar novamente e o estado não é apresentado como busca sem resultados
-- **AC-15 (FR-02, FR-03) — Resposta parcial:**
-	- **Given** que uma resposta meteorológica contém alguns campos válidos e omite outros campos esperados
-	- **When** os dados são exibidos
-	- **Then** os campos válidos são apresentados, os campos ausentes são identificados como indisponíveis sem inventar valores e as seções independentes com dados válidos continuam visíveis
+- **AC-01 (FR-01, FR-05) — Busca vazia e envio:**
+  - **Given** que o campo de busca está vazio ou contém somente espaços
+  - **When** o usuário envia a busca
+  - **Then** nenhuma solicitação de geocodificação é feita e a interface informa que uma cidade deve ser digitada
+- **AC-02 (FR-01) — Caracteres e normalização:**
+  - **Given** que o usuário informa um nome com acentos, espaços internos, hífen ou apóstrofo
+  - **When** envia a busca, com ou sem espaços externos
+  - **Then** os espaços externos são removidos, os caracteres internos são preservados e o nome retornado pela fonte é mostrado no resultado
+- **AC-03 (FR-01) — Identificação do resultado:**
+  - **Given** que a geocodificação retorna resultados homônimos
+  - **When** os resultados são exibidos
+  - **Then** cada resultado mostra cidade, região administrativa e país quando fornecidos pela fonte; campos indisponíveis não são inventados
+- **AC-04 (FR-01, FR-05) — Nenhum resultado:**
+  - **Given** que a geocodificação termina com sucesso e retorna uma lista vazia
+  - **When** a interface apresenta a resposta
+  - **Then** informa que nenhum resultado foi encontrado, não inicia consulta meteorológica e mantém a cidade e os dados previamente selecionados inalterados
+- **AC-05 (FR-01, FR-02, FR-03) — Seleção e identidade do local:**
+  - **Given** que resultados de busca estão disponíveis
+  - **When** o usuário seleciona um resultado
+  - **Then** a identidade exibida do local corresponde ao resultado escolhido, dados meteorológicos anteriores são removidos durante o novo carregamento e as consultas usam as coordenadas desse resultado
+- **AC-06 (FR-02) — Clima atual:**
+  - **Given** que a consulta do local selecionado retorna temperatura e código/condição válidos
+  - **When** o carregamento termina
+  - **Then** a temperatura e a condição traduzida para pt-BR são exibidas junto ao local selecionado e à unidade correspondente
+- **AC-07 (FR-03) — Previsão diária:**
+  - **Given** que há previsão válida e fuso horário para o local selecionado
+  - **When** a previsão é exibida
+  - **Then** há cinco datas locais consecutivas em ordem cronológica, começando hoje, cada uma com temperatura e condição traduzida para pt-BR
+- **AC-08 (FR-05) — Falha de serviço:**
+  - **Given** que geocodificação ou meteorologia retorna erro de rede, resposta HTTP de erro ou conteúdo inválido
+  - **When** a operação termina
+  - **Then** o carregamento termina, um estado de falha distinto de “nenhum resultado” é exibido e há uma ação para tentar novamente; consulta meteorológica malsucedida não mostra dados da seleção anterior
+- **AC-09 (FR-05) — Timeout:**
+  - **Given** que uma solicitação de busca ou meteorologia permanece pendente
+  - **When** 10 segundos se passam sem resposta
+  - **Then** a solicitação termina, o carregamento é encerrado e a interface mostra falha com ação para tentar novamente, sem classificá-la como ausência de resultados
+- **AC-10 (FR-02, FR-03) — Resposta parcial:**
+  - **Given** que uma resposta meteorológica válida omite temperatura ou condição em um período
+  - **When** clima atual ou previsão é exibido
+  - **Then** o campo recebido é mostrado, o campo ausente é identificado como indisponível e nenhum valor é inferido; uma data sem dados permanece identificada e marcada como indisponível
+- **AC-11 (FR-04) — Unidade inicial e escopo:**
+  - **Given** que a página é carregada ou recarregada completamente
+  - **When** temperaturas são exibidas
+  - **Then** todas estão em Celsius, identificadas por °C; após uma troca de unidade, a escolha permanece consistente durante a página aberta, inclusive ao consultar outra cidade, e volta a Celsius após recarga completa
+- **AC-12 (FR-04) — Conversão:**
+  - **Given** que as temperaturas visíveis estão em Celsius
+  - **When** o usuário seleciona Fahrenheit
+  - **Then** todas as temperaturas atuais e da previsão passam para °F usando $F = C \times 9/5 + 32$, arredondadas ao inteiro mais próximo, com metade arredondada para longe de zero; 0 °C resulta em 32 °F e 100 °C em 212 °F
+  - **When** o usuário seleciona Celsius
+  - **Then** todas as temperaturas retornam aos valores Celsius correspondentes e são identificadas por °C
+- **AC-13 (FR-05) — Carregamento e retry:**
+  - **Given** que uma busca ou consulta meteorológica foi enviada
+  - **When** não há resposta terminal
+  - **Then** há indicação visível de carregamento associada à operação; após falha, retry repete a mesma operação e mantém o termo/local associado
+- **AC-14 — Idioma:**
+  - **Given** que a interface está carregada
+  - **When** textos de busca, estados, datas e condições são apresentados
+  - **Then** os textos estão em pt-BR e as datas da previsão seguem o fuso do local selecionado
+- **AC-15 (FR-03) — Fuso ausente:**
+  - **Given** que a fonte não fornece um fuso horário válido para o local
+  - **When** a previsão é solicitada
+  - **Then** a previsão não usa o fuso do dispositivo nem é exibida como se fosse local; é mostrado um estado de indisponibilidade da previsão
 
 ## Non-Functional Requirements
 
-- **NFR-01 — Responsividade:** busca, seleção de cidade, informações meteorológicas e controle de unidade devem permanecer utilizáveis em telas móveis e desktop, sem conteúdo ou controles inacessíveis por causa do tamanho da tela. A matriz de viewports suportados ainda precisa ser definida.
-- **NFR-02 — Acessibilidade:** funcionalidades essenciais devem ser operáveis por teclado, com foco perceptível e nomes/semântica acessíveis para controles e estados. O padrão e o nível de conformidade ainda precisam ser definidos.
-- **NFR-03 — Consistência:** toda temperatura visível deve corresponder à unidade selecionada e ter indicação de unidade (AC-06 e AC-07).
-- **NFR-04 — Clareza dos dados:** a interface deve identificar a cidade selecionada e não deve apresentar uma resposta ausente ou falha como dado meteorológico atual (AC-03 e AC-04).
-- **NFR-05 — Desempenho e disponibilidade:** metas quantitativas para latência, atualização e disponibilidade não foram definidas e devem ser acordadas antes de serem usadas como critérios de liberação.
-- **NFR-06 — Privacidade e minimização:** a primeira versão não requer conta nem persistência de dados no servidor. Qualquer coleta adicional, incluindo localização, histórico local ou métricas de uso, depende de decisão explícita sobre finalidade, consentimento e retenção.
+- **NFR-01 — Responsividade:** os fluxos essenciais devem funcionar sem rolagem horizontal nas larguras de 320, 768 e 1280 px, em orientação retrato e paisagem.
+- **NFR-02 — Acessibilidade:** atender WCAG 2.2 nível AA; todos os controles devem ser operáveis por teclado, ter foco visível, nome acessível e estado de carregamento/erro anunciado por tecnologia assistiva.
+- **NFR-03 — Desempenho do cliente:** como metas iniciais, Core Web Vitals no percentil 75: LCP ≤ 2,5 s, INP ≤ 200 ms e CLS ≤ 0,1. Solicitações de dados obedecem ao timeout de 10 s de AC-09.
+- **NFR-04 — Consistência e integridade:** cada temperatura tem unidade explícita; dados meteorológicos devem permanecer associados ao local selecionado e a uma resposta válida.
+- **NFR-05 — Privacidade:** sem conta, geolocalização automática ou persistência de dados no servidor. Não coletar telemetria nem armazenar termos de busca além da sessão sem aprovação de finalidade, retenção e aviso ao usuário.
+- **NFR-06 — Operação:** a Open-Meteo é dependência externa sem disponibilidade garantida pela aplicação; erros e timeouts devem ser distinguíveis de resultados vazios e monitoráveis. SLA, canal de suporte e responsável operacional precisam ser definidos antes do lançamento.
 
 ## Edge Cases
 
-- **Cidade inexistente:** se a busca válida retornar zero correspondências, exibir que nenhuma cidade foi encontrada, não selecionar um local nem iniciar a consulta meteorológica e permitir editar a busca (AC-09). A aplicação não deve afirmar que a cidade não existe; a ausência de correspondência não comprova isso.
-- **Input vazio:** se o campo estiver vazio ou contiver apenas espaços, não consultar o serviço de geocodificação e solicitar que o usuário digite uma cidade (AC-12).
-- **Caracteres especiais:** preservar letras acentuadas e caracteres significativos como espaços internos, hífen e apóstrofo na busca; apresentar o nome retornado pela fonte no resultado selecionável (AC-13).
-- **Falha de API:** se geocodificação ou meteorologia retornar erro, mostrar um estado de falha distinto de “nenhum resultado”, não apresentar dados inexistentes como atuais e disponibilizar tentativa novamente (AC-10).
-- **Timeout:** se uma busca ou consulta meteorológica exceder o limite configurado, encerrar o estado de carregamento, informar a falha e oferecer tentativa novamente; não tratar timeout como lista vazia (AC-14).
-- **Geocoding sem resultados:** se o serviço de geocodificação responder com sucesso e lista vazia, informar que não foram encontrados resultados, não selecionar uma cidade e não solicitar dados meteorológicos (AC-09). Este é o comportamento observável tanto para uma cidade inexistente quanto para uma consulta sem correspondência; o app não deve inferir a causa.
-- **Resposta parcial:** exibir os campos válidos recebidos, indicar como indisponíveis os campos esperados que faltam, não substituí-los por valores inventados e manter visíveis as seções independentes que tenham dados válidos (AC-15).
-- A busca retorna cidades homônimas ou locais geograficamente próximos com nomes semelhantes.
-- Os dados retornados estão atrasados ou não podem ser associados com segurança à cidade escolhida.
-- A data da previsão muda conforme o fuso horário local, especialmente perto da meia-noite ou da mudança de data no dispositivo do usuário.
-- O usuário alterna unidades durante o carregamento ou após uma atualização dos dados.
-- A preferência de unidade não foi definida ou não pode ser restaurada; o comportamento persistente ainda é uma pergunta aberta.
-- A viewport é estreita, a orientação muda ou o usuário amplia o conteúdo; controles e informações precisam continuar acessíveis conforme a matriz de suporte a definir.
-- Uma resposta anterior permanece na tela enquanto uma nova cidade é consultada; deve ficar claro a qual local e estado ela pertence, sem ser apresentada como resultado novo.
+- **Cidade inexistente / geocoding vazio:** tratar como ausência de correspondência; não afirmar que a cidade inexiste. Não iniciar consulta meteorológica nem alterar a seleção anterior (AC-04).
+- **Input vazio ou espaços externos:** impedir chamada quando vazio; remover somente espaços externos antes de pesquisar (AC-01 e AC-02).
+- **Caracteres especiais:** preservar caracteres internos do nome, inclusive acentos, hífen e apóstrofo (AC-02).
+- **Falha de API ou payload inválido:** encerrar carregamento, preservar termo/local associado, mostrar erro e permitir retry; não mostrar dados antigos como novos (AC-08 e AC-13).
+- **Timeout:** após 10 s, finalizar o estado pendente e oferecer retry (AC-09).
+- **Resposta parcial:** mostrar campos disponíveis, sinalizar os ausentes e manter a data identificada sem criar valores (AC-10).
+- **Fuso ausente:** não substituir pelo fuso do dispositivo; não apresentar datas possivelmente incorretas (AC-15).
+- **Troca de cidade durante carregamento:** uma nova seleção invalida a resposta pendente anterior; somente dados da seleção mais recente podem substituir o estado de carregamento (AC-05).
 
 ## Assumptions
 
-- A consulta é iniciada pelo usuário, que pesquisa e seleciona uma cidade manualmente.
-- “Cinco dias” significa hoje mais os quatro dias seguintes.
-- Celsius é a unidade padrão inicial; alternar para Fahrenheit deve atualizar as temperaturas mostradas.
-- A experiência é uma aplicação web utilizável em dispositivos móveis. PWA e aplicativos nativos não estão definidos.
-- A Open-Meteo é a fonte de dados escolhida para a primeira versão, sem API key; sua adequação operacional e suas condições de uso ainda serão verificadas.
-- Não haverá autenticação nem persistência de dados no servidor na primeira versão.
-- O idioma da interface é pt-BR; formatos regionais de data e hora ainda precisam ser definidos.
-- As personas e suas métricas são hipóteses de discovery, não resultados de pesquisa com usuários.
+- A busca é manual e enviada pelo usuário; não há busca automática enquanto digita.
+- “Cinco dias” significa hoje e os quatro dias locais seguintes; a previsão é diária, não horária.
+- Celsius é padrão; a unidade escolhida só dura enquanto a página atual estiver aberta.
+- A condição meteorológica da fonte pode ser mapeada para um rótulo em pt-BR.
+- O timeout de 10 s, viewports de referência, WCAG 2.2 AA e metas de Core Web Vitals são baselines propostos e exigem aprovação antes do lançamento.
+- Personas são hipóteses, não resultados de pesquisa com usuários.
 
 ## Risks
 
-| Risco | Probabilidade | Impacto | Mitigação |
-| --- | --- | --- | --- |
-| Indisponibilidade, limite de requisições ou mudança na Open-Meteo | Média | Alto: clima atual e previsão podem não carregar. | Confirmar cobertura, limites, licença e condições de uso; tratar erro e timeout; monitorar falhas e decidir contingência. |
-| Dados incompletos, atrasados ou inconsistentes | Média | Alto: decisões podem se basear em informação incorreta ou apresentada como atual. | Definir requisitos de cobertura e atualização; validar os dados e indicar sua atualização quando esse requisito for definido. |
-| Seleção de cidade homônima ou imprecisa | Alta | Médio: o usuário pode consultar outro local. | Apresentar contexto geográfico suficiente e permitir seleção explícita; definir os campos de identificação. |
-| Granularidade, campos e fuso da previsão indefinidos | Alta | Alto: conteúdo, interface e testes podem exigir retrabalho. | Decidir previsão diária ou horária, campos e regra de data local antes do plano técnico. |
-| Conversão ou rótulo incorreto de unidade | Média | Alto: temperaturas podem ser interpretadas incorretamente. | Validar conversão, rótulos e consistência em clima atual e previsão com valores de referência. |
-| Suporte inadequado a dispositivos ou tecnologias assistivas | Média | Alto: alguns usuários podem não conseguir consultar ou operar o app. | Definir matriz de suporte e critérios de acessibilidade; validar teclado, leitor de tela e viewports acordados. |
-| Metas de qualidade e sucesso não definidas | Alta | Alto: não há critério objetivo para avaliar o produto ou priorizar melhorias. | Definir público, métricas de sucesso, metas de performance e disponibilidade com stakeholders. |
-| Expectativa de recursos não confirmados | Média | Médio: usuários podem esperar alertas, geolocalização ou uso offline. | Comunicar o escopo da primeira versão e confirmar as expectativas nas perguntas abertas. |
-| Coleta de localização, preferências ou métricas sem regras de privacidade | Baixa a média | Alto: risco de perda de confiança ou incompatibilidade com políticas aplicáveis. | Minimizar coleta e definir finalidade, consentimento, retenção e controles antes de introduzir esses recursos. |
+| Risco | Impacto | Mitigação |
+| --- | --- | --- |
+| Cobertura, limites, licença ou disponibilidade da Open-Meteo incompatíveis com o uso | Dados indisponíveis ou lançamento não autorizado | Confirmar termos, cobertura e volume previstos antes do lançamento; monitorar falhas e definir contingência. |
+| Dados desatualizados ou incompletos | Informação meteorológica enganosa | Definir SLA de atualização com base na fonte; sinalizar indisponibilidade e nunca completar dados ausentes por inferência. |
+| Resultado geográfico ambíguo | Consulta para cidade errada | Mostrar contexto retornado e manter seleção explícita; validar cidades homônimas. |
+| Metas operacionais não aprovadas | Não há critério objetivo de prontidão | Aprovar metas, responsável de operação e canal de suporte antes do go-live. |
 
 ## Out of Scope
 
-Não fazem parte da primeira versão conforme as decisões disponíveis; qualquer inclusão depende de confirmação de produto:
-
-- Cadastro, autenticação ou conta de usuário.
-- Persistência de dados no servidor.
-- Alertas de tempo severo ou notificações.
-- Geolocalização automática ou solicitação de permissão de localização.
-- Favoritos, histórico de cidades ou sincronização entre dispositivos.
-- Funcionamento offline ou apresentação de dados em cache como se fossem atuais.
-- Aplicativos nativos ou instalação como PWA.
-- Métricas de uso ou coleta de dados pessoais não aprovadas.
+- Contas, autenticação e persistência de servidor.
+- Geolocalização automática, cidade padrão, favoritos e histórico.
+- Alertas, notificações e funcionamento offline.
+- Aplicativos nativos e instalação PWA.
+- Previsão horária, campos meteorológicos além de temperatura e condição, até aprovação de escopo.
+- Telemetria ou coleta de dados pessoais sem aprovação específica.
 
 ## Open Questions
 
-1. Quem são os usuários prioritários e quais situações de uso devem orientar as prioridades? Quais métricas de negócio ou sucesso serão usadas?
-2. Alertas de tempo severo fazem parte do produto futuro ou a aplicação se limita a condições atuais e previsão regular?
-3. Quais países e regiões a busca deve cobrir? Como será a interação de busca (texto livre, sugestões enquanto digita ou outra) e qual será o fallback quando a fonte não retornar região administrativa para um resultado?
-4. Quais textos devem ser usados nos estados de busca sem resultado, falha de API e timeout, além das mensagens de orientação e da ação de tentar novamente?
-5. A seleção será exclusivamente manual ou haverá cidade padrão, geolocalização, histórico ou favoritos?
-6. Quais campos meteorológicos adicionais, além de temperatura e condição, devem aparecer no clima atual e na previsão? A previsão deve incluir intervalos horários?
-7. Como datas e horários locais devem ser formatados em pt-BR? Qual fallback usar se não houver fuso horário disponível para a cidade?
-8. Com que frequência os dados devem ser atualizados e qual idade máxima é aceitável? A interface deve mostrar horário da última atualização?
-9. A troca de unidade afeta apenas temperatura? Quais unidades e convenções serão usadas para vento, precipitação e outros campos, se exibidos?
-10. A unidade escolhida deve persistir entre visitas ou dispositivos? Se sim, onde e por quanto tempo?
-11. “Usável em dispositivos móveis” significa site responsivo, PWA, aplicativo nativo ou combinação? Quais tamanhos de tela, sistemas, navegadores e orientações precisam de suporte?
-12. Qual padrão e nível de acessibilidade devem ser atendidos? Quais tecnologias assistivas e critérios de teste serão considerados?
-13. Quais são as metas de performance para busca e carregamento e a disponibilidade esperada? Qual resposta degradada é aceitável quando a fonte falha?
-14. É necessário funcionar sem conexão ou exibir dados armazenados anteriormente? Se sim, qual validade e como sua idade será comunicada?
-15. A Open-Meteo atende à cobertura, atualização, licença, custo e volume de requisições esperados? Quais limites e condições operacionais se aplicam?
-16. Além de conta e persistência de servidor, haverá armazenamento local, telemetria ou coleta de localização? Para qual finalidade, por quanto tempo e sob quais controles de privacidade e segurança?
-17. Quem será responsável após o lançamento por monitorar falhas, limites da fonte e qualidade dos dados?
+Itens bloqueadores ou que precisam de aprovação antes do lançamento:
+
+1. A Open-Meteo cobre os países/regiões desejados e permite o uso, tráfego e atribuição pretendidos? Quais limites e termos aplicam-se?
+2. Qual é a frequência de atualização e idade máxima aceitável dos dados? A interface deve mostrar horário da última atualização?
+3. Qual matriz de navegadores, sistemas operacionais e dispositivos, além dos viewports de referência, será suportada?
+4. As metas propostas de timeout, WCAG e Core Web Vitals são aprovadas? Qual disponibilidade e canal de suporte serão prometidos?
+5. Quais requisitos corporativos de segurança, privacidade, retenção ou aviso legal se aplicam?
+6. Quem valida o mapeamento dos códigos meteorológicos da fonte para descrições em pt-BR?
+7. Há métricas de negócio ou sucesso para avaliar a primeira versão e quem é responsável por acompanhá-las?
