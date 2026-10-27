@@ -10,7 +10,7 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 
 - **FR-01 — Buscar e selecionar cidade:** aceitar uma busca manual enviada pelo usuário, apresentar resultados identificáveis e permitir selecionar um local. Critérios: AC-01 a AC-05.
 - **FR-02 — Consultar clima atual:** para o local selecionado, exibir temperatura, condição meteorológica, umidade, velocidade do vento, precipitação e pressão, com local e unidades identificados. Critérios: AC-05, AC-06, AC-08 e AC-10.
-- **FR-03 — Consultar previsão:** exibir uma previsão diária para hoje e os quatro dias seguintes, segundo as datas locais do local selecionado. Critérios: AC-05, AC-07, AC-08, AC-10 e AC-15.
+- **FR-03 — Consultar previsão:** exibir a previsão diária de hoje e dos quatro dias seguintes, segundo as datas locais, com temperaturas máxima e mínima e probabilidade de precipitação. Critérios: AC-05, AC-07, AC-08, AC-10 e AC-15.
 - **FR-04 — Alternar unidade:** permitir alternar entre Celsius e Fahrenheit; usar Celsius como padrão e aplicar a seleção a todas as temperaturas visíveis. Critérios: AC-11 e AC-12.
 - **FR-05 — Comunicar estados:** indicar carregamento, ausência de resultados, falha e timeout de forma distinta; permitir tentativa manual após falha. Critérios: AC-01, AC-04, AC-08, AC-09 e AC-13.
 
@@ -61,7 +61,7 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 - **AC-07 (FR-03) — Previsão diária:**
   - **Given** que há previsão válida e fuso horário para o local selecionado
   - **When** a previsão é exibida
-  - **Then** há cinco datas locais consecutivas em ordem cronológica, começando hoje, cada uma com temperatura e condição traduzida para pt-BR
+  - **Then** há cinco datas locais consecutivas em ordem cronológica, começando hoje; cada dia mostra máxima, mínima e probabilidade de precipitação com unidades explícitas, condição traduzida para pt-BR e um rótulo legível do dia
 - **AC-08 (FR-05) — Falha de serviço:**
   - **Given** que geocodificação ou meteorologia retorna erro de rede, resposta HTTP de erro ou conteúdo inválido
   - **When** a operação termina
@@ -71,9 +71,9 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
   - **When** 10 segundos se passam sem resposta
   - **Then** a solicitação termina, o carregamento é encerrado e a interface mostra falha com ação para tentar novamente, sem classificá-la como ausência de resultados
 - **AC-10 (FR-02, FR-03) — Resposta parcial:**
-  - **Given** que uma resposta meteorológica válida omite temperatura ou condição em um período
+  - **Given** que uma resposta meteorológica válida omite um ou mais campos solicitados para clima atual ou previsão, incluindo máxima, mínima ou probabilidade de precipitação
   - **When** clima atual ou previsão é exibido
-  - **Then** o campo recebido é mostrado, o campo ausente é identificado como indisponível e nenhum valor é inferido; uma data sem dados permanece identificada e marcada como indisponível
+  - **Then** cada campo recebido é mostrado, cada campo ausente é identificado como indisponível sem valor inferido, e a data sem previsão permanece identificada
 - **AC-11 (FR-04) — Unidade inicial e escopo:**
   - **Given** que a página é carregada ou recarregada completamente
   - **When** temperaturas são exibidas
@@ -141,7 +141,7 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 - Geolocalização automática, cidade padrão, favoritos e histórico.
 - Alertas, notificações e funcionamento offline.
 - Aplicativos nativos e instalação PWA.
-- Previsão horária e campos meteorológicos além de temperatura, condição, umidade, velocidade do vento, precipitação e pressão.
+- Previsão horária e campos meteorológicos além de máxima, mínima, probabilidade de precipitação, condição, umidade, velocidade do vento, precipitação acumulada e pressão.
 - Telemetria ou coleta de dados pessoais sem aprovação específica.
 
 ## Open Questions

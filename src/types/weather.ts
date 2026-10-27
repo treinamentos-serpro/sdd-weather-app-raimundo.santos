@@ -27,7 +27,9 @@ export interface CurrentWeather {
 
 export interface ForecastDay {
   localDate: string;
-  temperatureCelsius: number | null;
+  temperatureMaxCelsius: number | null;
+  temperatureMinCelsius: number | null;
+  precipitationProbabilityPercent: number | null;
   condition: WeatherCondition | null;
 }
 

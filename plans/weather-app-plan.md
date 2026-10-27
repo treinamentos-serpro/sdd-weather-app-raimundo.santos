@@ -59,6 +59,7 @@ src/
   lib/
     weatherMapper.ts        # mapeadores puros de DTO para domínio
     weatherCodes.ts         # códigos WMO para rótulos pt-BR e ícones
+    format.ts               # rótulos de dia baseados na data local
     temperature.ts          # conversão e arredondamento de temperatura
 tests/
   unit/
@@ -105,7 +106,9 @@ export interface CurrentWeather {
 
 export interface ForecastDay {
   localDate: string; // daily.time no fuso da cidade, formato YYYY-MM-DD
-  temperatureCelsius: number | null; // Campo daily de temperatura ainda depende da spec
+  temperatureMaxCelsius: number | null; // daily.temperature_2m_max em °C
+  temperatureMinCelsius: number | null; // daily.temperature_2m_min em °C
+  precipitationProbabilityPercent: number | null; // daily.precipitation_probability_max em %
   condition: WeatherCondition | null; // daily.weather_code mapeado para pt-BR
 }
 
@@ -132,7 +135,7 @@ export type SearchState = AsyncState<City[]> | { status: 'empty' };
 export type WeatherState = AsyncState<WeatherData>;
 ```
 
-`City.id` deve identificar unicamente o resultado selecionável; usar o identificador do provedor quando disponível e uma chave estável baseada na identidade geográfica quando não estiver. Campos opcionais não devem ser inventados. `WeatherData.days` contém as cinco datas locais esperadas; valores ausentes são `null` conforme AC-10. A decisão sobre qual estatística diária da Open-Meteo alimentar `ForecastDay.temperatureCelsius` (máxima, mínima ou média) permanece pendente e precisa ser resolvida antes de fechar o contrato da API (AC-07, Open Questions 2 e 6).
+`City.id` deve identificar unicamente o resultado selecionável; usar o identificador do provedor quando disponível e uma chave estável baseada na identidade geográfica quando não estiver. Campos opcionais não devem ser inventados. `WeatherData.days` contém as cinco datas locais esperadas, com máxima, mínima e probabilidade de precipitação; valores ausentes são `null` conforme AC-10.
 
 ## Data Flow
 
@@ -203,9 +206,9 @@ Mapeamento para `City`: `id` vira string estável; `name`, `latitude` e `longitu
 
 **Método e URL:** `GET https://api.open-meteo.com/v1/forecast`
 
-Parâmetros: `latitude` e `longitude` da `City` selecionada; `current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,surface_pressure`; `daily=weather_code,<daily_temperature_field>`; `temperature_unit=celsius`; `wind_speed_unit=kmh`; `precipitation_unit=mm`; `timezone=auto`; `forecast_days=5`. O marcador `<daily_temperature_field>` não é literal: substituir pelo campo diário escolhido pelo produto, por exemplo `temperature_2m_max` ou `temperature_2m_min`. A spec ainda não define qual estatística apresentar, então a consulta e o mapeamento final desse campo permanecem pendentes (AC-07).
+Parâmetros: `latitude` e `longitude` da `City` selecionada; `current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,surface_pressure`; `daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max`; `temperature_unit=celsius`; `wind_speed_unit=kmh`; `precipitation_unit=mm`; `timezone=auto`; `forecast_days=5`.
 
-Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustrar a forma do payload, não como escolha de produto:
+Exemplo resumido de resposta com cinco dias:
 
 ```json
 {
@@ -230,12 +233,16 @@ Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustra
   "daily_units": {
     "time": "iso8601",
     "temperature_2m_max": "°C",
+    "temperature_2m_min": "°C",
+    "precipitation_probability_max": "%",
     "weather_code": "wmo code"
   },
   "daily": {
-    "time": ["2026-10-27", "2026-10-28"],
-    "temperature_2m_max": [20.1, 21.3],
-    "weather_code": [2, 3]
+    "time": ["2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30", "2026-10-31"],
+    "temperature_2m_max": [20.1, 21.3, 19.8, 17.6, 18.9],
+    "temperature_2m_min": [13.2, 14.1, 12.8, 11.6, 12.4],
+    "precipitation_probability_max": [10, 5, 20, 70, 15],
+    "weather_code": [2, 1, 3, 61, 2]
   }
 }
 ```
@@ -243,7 +250,7 @@ Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustra
 Mapeamento para o modelo:
 
 - `current.temperature_2m` → `CurrentWeather.temperatureCelsius`; `current.weather_code` → `CurrentWeather.condition.code` e `labelPtBr` pela tabela de códigos validada; `relative_humidity_2m`, `wind_speed_10m`, `precipitation` e `surface_pressure` → `humidityPercent`, `windSpeedKmh`, `precipitationMm` e `pressureHpa`.
-- Para cada índice `i`, `daily.time[i]` → `ForecastDay.localDate`; `daily.<daily_temperature_field>[i]` → `ForecastDay.temperatureCelsius`; `daily.weather_code[i]` → `ForecastDay.condition`.
+- Para cada índice `i`, `daily.time[i]` → `ForecastDay.localDate`; `daily.temperature_2m_max[i]` e `daily.temperature_2m_min[i]` → `temperatureMaxCelsius` e `temperatureMinCelsius`; `daily.precipitation_probability_max[i]` → `precipitationProbabilityPercent`; `daily.weather_code[i]` → `ForecastDay.condition`.
 - `timezone` → `WeatherData.timeZone`; a `City` selecionada → `WeatherData.city`; os objetos `current` e `daily` normalizados → `WeatherData.current` e `WeatherData.days`.
 - `current_units` e `daily_units` validam que as temperaturas recebidas são °C; ausência de valor mapeia para `null`, não para zero (AC-06/10). Converter para a unidade escolhida somente na apresentação (AC-11/12).
 
@@ -306,6 +313,5 @@ Se o valor for `null`, a função retorna `null` e a UI exibe “indisponível�
 | Armazenar temperatura em Celsius e derivar unidade na UI | Buscar dados separados por unidade ou armazenar cópias em °C e °F | Uma fonte canônica evita divergência e request extra; conversão e arredondamento precisam ser testados (AC-11/12). |
 | Retry manual após erro | Retry automático com backoff | Controle simples e sem amplificar limites do provedor; o usuário precisa iniciar nova tentativa (AC-08/09/13). |
 | Provedor externo sem SLA da aplicação | Provedor alternativo ou fallback próprio | Falhas externas podem interromper busca/clima; timeout, erro distinguível e monitoramento reduzem impacto, mas não garantem disponibilidade (NFR-06). |
-| Campo diário de temperatura ainda não aprovado | Escolher máxima, mínima ou média | Bloqueia fechar parâmetro e fixture de forecast; resolver com produto antes da integração (AC-07; Open Questions 2 e 6). |
 | Código de condição sem mapeamento validado | Exibir somente o código WMO | Rótulos em pt-BR melhoram compreensão, mas exigem tabela e fallback testados (AC-06/07; Open Question 6). |
 | Baselines de performance e suporte aguardam aprovação | Fixar metas após validação com stakeholders | Sem aprovação não há gate de lançamento definitivo; confirmar timeout, WCAG, viewports, Core Web Vitals e SLA (NFR-01/03/06; Open Questions 3/4). |

@@ -1,6 +1,6 @@
 # Weather App — Backlog de Tarefas
 
-Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T-04 são gates: registram decisões ainda pendentes no plano/spec e não autorizam a equipe a presumir uma resposta.
+Tarefas agrupadas por entrega e ordenadas pelas dependências. T-01 formaliza a decisão de exibir máximas, mínimas e probabilidade de precipitação diária; T-02 a T-04 permanecem gates externos e não devem ser presumidos.
 
 ## Matriz de rastreabilidade funcional
 
@@ -8,7 +8,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 | --- | --- | --- | --- |
 | FR-01 — Buscar e selecionar cidade | T-05, T-07, T-09, T-11, T-12, T-17, T-18 | T-19, T-22, T-24, T-25, T-29 | Coberto: busca, mapeamento, seleção, UI e fluxo E2E. |
 | FR-02 — Consultar clima atual | T-05 a T-08, T-10, T-11, T-13, T-17, T-18 | T-19 a T-21, T-23, T-24, T-26, T-29 | Coberto: temperatura, condição/ícone, quatro métricas com unidades, estados e integração. |
-| FR-03 — Consultar previsão de cinco dias | T-01 (gate), T-05, T-06, T-07, T-10, T-11, T-14, T-17, T-18 | T-19, T-20, T-23, T-24, T-27, T-29 | Tarefas previstas; T-01 bloqueia a definição de máxima/mínima/média antes de fechar o campo diário. |
+| FR-03 — Consultar previsão de cinco dias | T-01, T-05, T-06, T-07, T-10, T-11, T-14, T-17, T-18 | T-19, T-20, T-23, T-24, T-27, T-29 | Coberto: máximas, mínimas, probabilidade de precipitação e datas locais. |
 | FR-04 — Alternar Celsius/Fahrenheit | T-05, T-08, T-11, T-15, T-17, T-18 | T-21, T-24, T-28, T-29 | Coberto: conversão pura, controle, derivação sem novo request e fluxo E2E. |
 | FR-05 — Comunicar estados da consulta | T-09, T-10, T-11, T-12, T-13, T-14, T-17, T-18 | T-22, T-23, T-24, T-25, T-26, T-27, T-29 | Coberto: loading, vazio na busca, erro, timeout e retry manual. |
 
@@ -63,10 +63,10 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ## Entrega 1 — Contratos e gates
 
-### T-01 — Definir temperatura da previsão diária
+### T-01 — Formalizar métricas da previsão diária
 
-- **Descrição:** decidir se a temperatura diária apresentada será máxima, mínima ou média e registrar o campo Open-Meteo correspondente.
-- **Critérios de aceite:** spec e plano identificam uma única estatística (máxima, mínima ou média) e seu campo Open-Meteo; `daily_temperature_field` é substituído pelo nome exato; exemplo e AC-07 usam essa mesma estatística.
+- **Descrição:** formalizar temperaturas máxima e mínima e probabilidade de precipitação para cada dia local.
+- **Critérios de aceite:** spec e plano usam `temperature_2m_max`, `temperature_2m_min` e `precipitation_probability_max`; o modelo define máximas/mínimas em Celsius e probabilidade em percentual; AC-07 e exemplo usam os três campos; não permanece o marcador `daily_temperature_field`.
 - **Rastreabilidade:** FR-03, AC-07.
 - **Dependências:** nenhuma.
 - **Arquivos prováveis:** `specs/weather-app-spec.md`, `plans/weather-app-plan.md`.
@@ -149,7 +149,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-10 — Implementar serviço de forecast
 
 - **Descrição:** consultar clima atual e previsão diária de cinco dias para as coordenadas da cidade selecionada.
-- **Critérios de aceite:** request usa coordenadas selecionadas, Celsius, umidade, vento em km/h, precipitação em mm, pressão em hPa, `timezone=auto`, `forecast_days=5` e variáveis `daily` aprovadas; fixture válida mapeia métricas e cinco datas; campos ausentes viram `null`; resposta inválida não retorna sucesso.
+- **Critérios de aceite:** request usa coordenadas selecionadas, Celsius, umidade, vento em km/h, precipitação em mm, pressão em hPa, `timezone=auto`, `forecast_days=5`, `temperature_2m_max`, `temperature_2m_min`, `precipitation_probability_max` e `weather_code`; fixture válida mapeia cinco datas; campos ausentes viram `null`; resposta inválida não retorna sucesso.
 - **Rastreabilidade:** FR-02, FR-03, FR-05, AC-05 a AC-10, AC-13, AC-15.
 - **Dependências:** T-01 a T-07, T-09.
 - **Arquivos prováveis:** `src/services/openMeteoService.ts`.
@@ -188,11 +188,12 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ### T-14 — Criar componente de previsão
 
-- **Descrição:** apresentar a previsão diária em grupos por data local.
-- **Critérios de aceite:** com cinco dias válidos, renderiza exatamente cinco datas em ordem; `null` exibe indisponibilidade; timezone inválido mostra estado indisponível e não usa timezone do dispositivo.
+- **Descrição:** implementar `ForecastList` e `ForecastCard` para apresentar os cinco dias locais com rótulo do dia, ícone WMO, máxima, mínima e probabilidade de chuva.
+- **Critérios de aceite:** grid usa `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`; cada card mostra dia por `formatDayLabel`, ícone por `getWeatherIcon`, máxima/mínima por `toDisplayTemperature` na unidade atual e probabilidade com `%`; `null` mostra indisponibilidade; não usa timezone do dispositivo.
 - **Rastreabilidade:** FR-03, AC-05, AC-07, AC-10, AC-14, AC-15, NFR-01/02/04.
 - **Dependências:** T-08, T-10, T-11.
 - **Arquivos prováveis:** `src/components/Forecast.tsx`.
+- **Arquivos prováveis:** `src/components/ForecastList.tsx`, `src/components/ForecastCard.tsx`, `src/lib/format.ts`.
 - **Tipo:** UI.
 
 ### T-15 — Criar controle de unidade
@@ -309,8 +310,9 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ### T-27 — Testar componente de previsão
 
-- **Descrição:** validar datas, valores e estados indisponíveis no painel de previsão.
-- **Critérios de aceite:** testes renderizam separadamente `loading`, `success` e `error`; fixture de sucesso verifica cinco datas ordenadas no timezone fornecido; `null` mostra indisponibilidade; unidade corresponde à prop; loading/erro têm role acessível e timezone inválido mostra estado indisponível. Não existe estado `empty` para clima.
+- **Descrição:** testar a lista e os cards da previsão, incluindo data local e métricas.
+- **Critérios de aceite:** teste verifica cinco cards na ordem, rótulos de dia sem deslocamento UTC, ícone WMO, máxima/mínima convertidas, probabilidade com `%` e campos ausentes como indisponíveis; grid contém as classes responsivas definidas.
+- **Arquivos prováveis:** `tests/unit/components/ForecastList.test.tsx`, `tests/unit/lib/format.test.ts`.
 - **Rastreabilidade:** AC-05, AC-07, AC-10, AC-14, AC-15, NFR-02.
 - **Dependências:** T-14.
 - **Arquivos prováveis:** `tests/unit/components/Forecast.test.tsx`.
