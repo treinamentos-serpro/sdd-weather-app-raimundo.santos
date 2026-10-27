@@ -22,6 +22,16 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 - **US-04 (FR-04):** Como Lúcia, que prefere Fahrenheit, quero alternar a unidade de temperatura para entender os valores sem conversão manual.
 - **US-05 (FR-05):** Como Caio, que planeja os próximos dias, quero distinguir carregamento, ausência de resultados e falha para saber se devo tentar novamente.
 
+## Traceability Matrix
+
+| User Story | Acceptance Criteria | Requisitos não funcionais relevantes |
+| --- | --- | --- |
+| US-01 — Pesquisar e selecionar cidade | AC-01 a AC-05, AC-08, AC-09, AC-13, AC-14 | NFR-01 responsividade; NFR-02 acessibilidade; NFR-03 desempenho; NFR-04 integridade/local selecionado; NFR-05 privacidade da busca; NFR-06 operação da API |
+| US-02 — Consultar clima atual | AC-05, AC-06, AC-08 a AC-10, AC-13, AC-14 | NFR-01 responsividade; NFR-02 acessibilidade; NFR-03 desempenho; NFR-04 integridade e unidade; NFR-06 operação da API |
+| US-03 — Consultar previsão de cinco dias | AC-05, AC-07 a AC-10, AC-13 a AC-15 | NFR-01 responsividade; NFR-02 acessibilidade; NFR-03 desempenho; NFR-04 integridade, unidade e local; NFR-06 operação da API |
+| US-04 — Alternar Celsius/Fahrenheit | AC-11, AC-12, AC-14 | NFR-01 responsividade; NFR-02 acessibilidade; NFR-04 consistência de unidade |
+| US-05 — Entender carregamento, vazio e falha | AC-01, AC-04, AC-08, AC-09, AC-13, AC-14 | NFR-01 responsividade; NFR-02 acessibilidade; NFR-03 desempenho/timeout; NFR-06 operação e monitoramento |
+
 ## Acceptance Criteria
 
 - **AC-01 (FR-01, FR-05) — Busca vazia e envio:**
