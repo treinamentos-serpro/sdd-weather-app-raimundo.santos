@@ -14,6 +14,53 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 **Requisitos sem tarefa correspondente:** nenhum FR da spec está sem tarefa de implementação ou teste. FR-03 permanece bloqueado pela decisão registrada em T-01; isso é uma dependência pendente, não uma lacuna de rastreabilidade.
 
+## Prioridade e tamanho
+
+**Prioridade:** P0 compõe o caminho funcional do MVP; P1 verifica critérios e regressões; P2 cobre prontidão operacional/go-live, pode vir após a demonstração, mas não pode ficar pendente no lançamento. **Tamanho:** S = pequeno (uma mudança simples, geralmente um arquivo); M = médio (contrato, integração ou conjunto de cenários de um arquivo); G = grande (coordenação entre estados/camadas ou vários cenários E2E). Estimativas relativas, não duração.
+
+| Tarefa | Prioridade | Tamanho |
+| --- | --- | --- |
+| T-01 | P0 | M |
+| T-02 | P0 | M |
+| T-03 | P0 | M |
+| T-04 | P2 | M |
+| T-05 | P0 | M |
+| T-06 | P0 | M |
+| T-07 | P0 | M |
+| T-08 | P0 | S |
+| T-09 | P0 | M |
+| T-10 | P0 | M |
+| T-11 | P0 | G |
+| T-12 | P0 | M |
+| T-13 | P0 | S |
+| T-14 | P0 | M |
+| T-15 | P0 | S |
+| T-16 | P0 | S |
+| T-17 | P0 | M |
+| T-18 | P0 | S |
+| T-19 | P1 | M |
+| T-20 | P1 | S |
+| T-21 | P1 | S |
+| T-22 | P1 | M |
+| T-23 | P1 | M |
+| T-24 | P1 | M |
+| T-25 | P1 | M |
+| T-26 | P1 | S |
+| T-27 | P1 | M |
+| T-28 | P1 | S |
+| T-29 | P1 | G |
+| T-30 | P2 | M |
+
+## Sequência em fatias verticais
+
+1. **Busca e seleção visíveis (P0):** T-03, T-05, T-06, T-07, T-09, T-11, T-12, T-16, T-17 e T-18; validar com T-19, T-22, T-24 e T-25. Entrega: pesquisar, distinguir e selecionar uma cidade com estados de loading/vazio/erro.
+2. **Clima atual (P1):** T-02, T-10 e T-13; validar com T-20, T-23 e T-26. Entrega: exibir temperatura e condição do local selecionado, com estado parcial/falha.
+3. **Previsão de cinco dias (P1):** T-01 e T-14; validar com T-27 e cenário integrado em T-29. Entrega: datas locais ordenadas e dados diários ou indisponibilidade explícita.
+4. **Alternância de unidade (P1):** T-08 e T-15; validar com T-21, T-28 e T-29. Entrega: temperaturas em °C/°F derivadas sem nova chamada.
+5. **Prontidão de lançamento (P2):** fechar T-04 e T-30 após as fatias funcionais e testes; qualquer gate pendente mantém o go-live bloqueado.
+
+**Ajuste para antecipar a primeira tela:** no grafo atual, T-11 depende de T-05 a T-10 (inclui forecast), e T-17 depende de T-12 a T-16 (inclui todos os painéis). Assim, a fatia de busca não pode ser concluída antes das fatias de clima/previsão. Para entregar algo visível mais cedo, decompor T-11 em busca e meteorologia e permitir que T-17 componha primeiro a busca, integrando os outros painéis nas fatias seguintes; caso contrário, considerar o conjunto T-01 a T-18 como a primeira entrega visual.
+
 ## Entrega 1 — Contratos e gates
 
 ### T-01 — Definir temperatura da previsão diária
