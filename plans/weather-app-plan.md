@@ -250,22 +250,26 @@ Se o valor for `null`, a função retorna `null` e a UI exibe “indisponível�
 
 ## Testing Strategy
 
-- **Vitest — `lib/`:** testar mapeamento de DTO, códigos WMO, datas locais e conversão/arredondamento com entradas e saídas fixas; sem mocks de rede, React ou relógio quando não necessários (AC-02/03/06/07/10/11/12/15).
-- **Vitest — `services/`:** substituir `fetch` por respostas controladas para validar URL/parâmetros, erro de rede, HTTP, envelope de erro da API, payload inválido, timeout e cancelamento; os testes não acessam a Open-Meteo real (AC-08/09/13).
-- **Vitest — `hooks/`:** substituir serviços por funções mockadas e verificar transições idle/loading/success/empty/error, retry, mudança de unidade sem nova chamada ao serviço e descarte de resposta obsoleta (AC-04/05/08/11/12/13).
-- **Testing Library — `components/`:** renderizar componentes com props/handlers controlados e validar conteúdo, mensagens, interação por teclado e semântica acessível, sem depender de APIs ou estado global (AC-01, AC-04, AC-06/07, AC-13/14; NFR-02).
-- **Playwright — E2E:** cobrir busca → seleção → clima e previsão, alternância de unidade, busca vazia/sem resultados, falha e timeout com APIs interceptadas e fixtures determinísticas (US-01 a US-05; AC-01 a AC-15).
-- **Viewports:** validar os fluxos essenciais em 320, 768 e 1280 px e retrato/paisagem (NFR-01); manter Chromium desktop e projeto mobile já configurados como base.
+- **Vitest — `lib/` (funções puras):** cobrir conversão Celsius/Fahrenheit com `0`, `100`, negativos, `null` e valores de arredondamento; testar mapeamento de códigos WMO, campos ausentes e datas. Usar entradas/saídas determinísticas, sem rede ou React (AC-02/03/06/07/10/11/12/15).
+- **Vitest — `services/` (mock de `fetch`):** verificar URL e parâmetros; resposta 2xx, lista vazia e payload parcial; erro de rede, HTTP não-2xx, envelope de erro da API, JSON/schema inválido, timeout em 10 s e cancelamento. Nenhum teste chama a Open-Meteo real (AC-04/08/09/10/13/15).
+- **Vitest + Testing Library — `hooks/`:** mockar serviços e verificar estados `idle`, `loading`, `success`, `empty` (só busca) e `error`; testar seleção, retry com os mesmos parâmetros, resposta obsoleta descartada e troca de unidade sem nova chamada ao serviço (AC-04/05/08/11/12/13).
+- **Vitest + Testing Library — `components/`:** renderizar com props/handlers controlados; cobrir a busca em `idle`, `loading`, `success`, `empty` e `error`, e clima em `idle`, `loading`, `success` (incluindo campos indisponíveis) e `error`. Verificar valores/mensagens visíveis, retry, `°C`/`°F`, teclado, foco e semântica acessível. Não acessar serviços nem estado global (AC-01, AC-04, AC-06/07, AC-10, AC-13/14; NFR-02).
+- **Playwright — E2E:** usar `page.route` com fixtures para busca → seleção → clima e cinco dias, troca de unidade sem novo request, busca vazia/sem resultado, erro e retry, timeout e troca rápida de cidade sem renderizar resposta antiga (US-01 a US-05; AC-01 a AC-15).
+- **Viewport mobile:** executar o fluxo principal em dispositivo mobile configurado e verificar layout/controles em 320 px, sem rolagem horizontal; complementar com 768 e 1280 px e retrato/paisagem (NFR-01). Manter Chromium desktop e projeto mobile existente como base.
 - **Rede:** nenhum teste automatizado depende de disponibilidade real da Open-Meteo. Manter fixtures de contrato derivadas de respostas documentadas e um smoke check externo separado apenas se o pipeline permitir acesso à rede.
 - **Metas:** lint, build e `pnpm test`; E2E com `pnpm test:e2e`. A medição de Core Web Vitals p75 exige ambiente de coleta e amostra real; não é comprovada por teste unitário (NFR-03).
 
 ## Risks & Trade-offs
 
-| Risco/decisão | Efeito | Mitigação ou trade-off |
+| Decisão | Alternativa considerada | Trade-off e controle |
 | --- | --- | --- |
-| Provedor externo sem SLA da aplicação | Busca ou clima podem ficar indisponíveis | Timeout, erro distinguível, retry manual e monitoramento; sem fallback/cache na primeira versão (AC-08/09; NFR-06). |
-| Campo diário de temperatura ainda não aprovado | Contrato e fixture do forecast não podem ser fechados | Bloqueia a implementação do endpoint de forecast até decidir máxima, mínima ou média (AC-07; Open Questions 2 e 6). |
-| Código de condição sem mapeamento validado | Rótulo pt-BR pode ficar incorreto ou incompleto | Validar tabela de códigos, idioma e fallback antes dos testes de contrato (AC-06/07; Open Question 6). |
-| Chamadas diretas do browser à Open-Meteo | Simplicidade e sem custo de backend, mas dependência de rede/termos do provedor | Confirmar CORS, limites, cobertura, licença e atribuição antes do lançamento; não há segredo de API a proteger. |
-| Sem cache nem persistência | Dados podem ser solicitados novamente após reload; preferência reinicia em Celsius | Evita dados expirados e armazenamento não especificado; alinhado a AC-11 e NFR-05. |
-| Baselines de performance e suporte ainda sujeitos a aprovação | Não há gate de lançamento final | Tratar timeout, WCAG, viewports, Core Web Vitals e SLA como baselines até aprovação (NFR-01/03/06; Open Questions 3/4). |
+| Estado local em hook React | Redux, Zustand ou Context global | Menos dependências e fluxo suficiente para uma tela; se surgirem múltiplos fluxos compartilhados, reavaliar. |
+| `fetch` direto do browser para Open-Meteo | Backend/proxy próprio | Evita custo e operação de servidor, pois não há API key; acopla o cliente ao provedor e depende de CORS/limites. Confirmar termos e cobertura antes do go-live. |
+| Sem biblioteca de cache/requisições | TanStack Query ou SWR | Menos abstração para duas consultas; abre mão de cache, deduplicação e retries automáticos, que não são requisitos atuais. |
+| Sem cache e sem modo offline | Cache com validade explícita/PWA | Evita apresentar previsão antiga como atual e reduz complexidade; exige conexão para buscar dados e refaz consultas após reload. |
+| Armazenar temperatura em Celsius e derivar unidade na UI | Buscar dados separados por unidade ou armazenar cópias em °C e °F | Uma fonte canônica evita divergência e request extra; conversão e arredondamento precisam ser testados (AC-11/12). |
+| Retry manual após erro | Retry automático com backoff | Controle simples e sem amplificar limites do provedor; o usuário precisa iniciar nova tentativa (AC-08/09/13). |
+| Provedor externo sem SLA da aplicação | Provedor alternativo ou fallback próprio | Falhas externas podem interromper busca/clima; timeout, erro distinguível e monitoramento reduzem impacto, mas não garantem disponibilidade (NFR-06). |
+| Campo diário de temperatura ainda não aprovado | Escolher máxima, mínima ou média | Bloqueia fechar parâmetro e fixture de forecast; resolver com produto antes da integração (AC-07; Open Questions 2 e 6). |
+| Código de condição sem mapeamento validado | Exibir somente o código WMO | Rótulos em pt-BR melhoram compreensão, mas exigem tabela e fallback testados (AC-06/07; Open Question 6). |
+| Baselines de performance e suporte aguardam aprovação | Fixar metas após validação com stakeholders | Sem aprovação não há gate de lançamento definitivo; confirmar timeout, WCAG, viewports, Core Web Vitals e SLA (NFR-01/03/06; Open Questions 3/4). |
