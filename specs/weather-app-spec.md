@@ -21,11 +21,11 @@ Aplicação web de consulta meteorológica que permite pesquisar e selecionar um
 
 ## Functional Requirements
 
-- **FR-01 — Buscar e selecionar uma cidade:** o usuário deve poder pesquisar uma cidade e selecionar o local desejado. Resultados devem mostrar cidade, região administrativa e país para distinguir locais homônimos. Critérios: AC-01 e AC-02.
-- **FR-02 — Consultar o clima atual:** após a seleção de uma cidade, o sistema deve exibir, no mínimo, temperatura e condição meteorológica atuais para esse local. Critérios: AC-03 e AC-04.
-- **FR-03 — Consultar previsão de cinco dias:** para a cidade selecionada, o sistema deve exibir a previsão de hoje e dos quatro dias seguintes, organizada por data, com no mínimo temperatura e condição meteorológica em cada data. A inclusão de intervalos horários permanece em aberto. Critérios: AC-05.
+- **FR-01 — Buscar e selecionar uma cidade:** o usuário deve poder pesquisar uma cidade e selecionar o local desejado. Resultados devem mostrar cidade, região administrativa e país para distinguir locais homônimos. Critérios: AC-01, AC-02, AC-09, AC-12 e AC-13.
+- **FR-02 — Consultar o clima atual:** após a seleção de uma cidade, o sistema deve exibir, no mínimo, temperatura e condição meteorológica atuais para esse local. Critérios: AC-03, AC-04 e AC-15.
+- **FR-03 — Consultar previsão de cinco dias:** para a cidade selecionada, o sistema deve exibir a previsão de hoje e dos quatro dias seguintes, organizada por data, com no mínimo temperatura e condição meteorológica em cada data. A inclusão de intervalos horários permanece em aberto. Critérios: AC-05 e AC-15.
 - **FR-04 — Alternar unidade de temperatura:** o usuário deve poder alternar entre Celsius e Fahrenheit; Celsius é a unidade inicial. A seleção deve ser aplicada consistentemente a todas as temperaturas exibidas. Critérios: AC-06 e AC-07.
-- **FR-05 — Comunicar estados da consulta:** durante busca e carregamento meteorológico, o sistema deve indicar que a operação está em andamento. Se a busca não retornar cidades ou a consulta meteorológica falhar ou exceder o tempo limite, deve informar o estado sem apresentar a consulta como bem-sucedida. Critérios: AC-08, AC-09 e AC-10.
+- **FR-05 — Comunicar estados da consulta:** durante busca e carregamento meteorológico, o sistema deve indicar que a operação está em andamento. Se a busca não retornar cidades ou a consulta meteorológica falhar ou exceder o tempo limite, deve informar o estado sem apresentar a consulta como bem-sucedida. Critérios: AC-08, AC-09, AC-10 e AC-14.
 
 ## User Stories
 
@@ -74,15 +74,31 @@ Aplicação web de consulta meteorológica que permite pesquisar e selecionar um
 - **AC-09 (FR-05) — Busca sem resultados:**
 	- **Given** que a busca de cidade termina com sucesso e retorna uma lista vazia
 	- **When** a interface apresenta o resultado da busca
-	- **Then** é exibido um estado de ausência de resultados, distinto do estado de falha
-- **AC-10 (FR-05) — Falha ou timeout:**
-	- **Given** que a busca de cidade ou a consulta meteorológica retorna erro ou excede o tempo limite
+	- **Then** é exibido um estado de ausência de resultados, distinto do estado de falha, nenhuma cidade é selecionada e nenhuma consulta meteorológica é iniciada
+- **AC-10 (FR-05) — Falha de API:**
+	- **Given** que a busca de cidade ou a consulta meteorológica retorna uma falha do serviço
 	- **When** a operação termina sem uma resposta bem-sucedida
-	- **Then** é exibido um estado de falha distinto do estado sem resultados e nenhum dado inexistente é apresentado como resultado atual
+	- **Then** é exibido um estado de erro distinto do estado sem resultados, nenhum dado inexistente é apresentado como resultado atual e uma ação para tentar novamente é disponibilizada
 - **AC-11 — Idioma:**
 	- **Given** que a interface está carregada
 	- **When** textos de busca, estados e consulta meteorológica são exibidos
 	- **Then** esses textos estão em pt-BR
+- **AC-12 (FR-01) — Input vazio:**
+	- **Given** que o campo de busca está vazio ou contém somente espaços
+	- **When** o usuário envia a busca
+	- **Then** a aplicação não inicia uma consulta de geocodificação e informa que é necessário digitar uma cidade
+- **AC-13 (FR-01) — Caracteres especiais:**
+	- **Given** que o usuário pesquisa um nome de cidade com letras acentuadas, espaços internos, hífen ou apóstrofo
+	- **When** a busca é enviada e retorna um resultado correspondente
+	- **Then** os caracteres significativos da consulta são preservados na busca e o nome exibido corresponde ao nome retornado para o resultado selecionável
+- **AC-14 (FR-05) — Timeout:**
+	- **Given** que a busca ou consulta meteorológica permanece sem resposta até exceder o limite de tempo configurado
+	- **When** o timeout é atingido
+	- **Then** o carregamento termina, é exibida uma mensagem de falha com ação para tentar novamente e o estado não é apresentado como busca sem resultados
+- **AC-15 (FR-02, FR-03) — Resposta parcial:**
+	- **Given** que uma resposta meteorológica contém alguns campos válidos e omite outros campos esperados
+	- **When** os dados são exibidos
+	- **Then** os campos válidos são apresentados, os campos ausentes são identificados como indisponíveis sem inventar valores e as seções independentes com dados válidos continuam visíveis
 
 ## Non-Functional Requirements
 
@@ -95,12 +111,15 @@ Aplicação web de consulta meteorológica que permite pesquisar e selecionar um
 
 ## Edge Cases
 
-- A busca não encontra nenhuma cidade correspondente.
+- **Cidade inexistente:** se a busca válida retornar zero correspondências, exibir que nenhuma cidade foi encontrada, não selecionar um local nem iniciar a consulta meteorológica e permitir editar a busca (AC-09). A aplicação não deve afirmar que a cidade não existe; a ausência de correspondência não comprova isso.
+- **Input vazio:** se o campo estiver vazio ou contiver apenas espaços, não consultar o serviço de geocodificação e solicitar que o usuário digite uma cidade (AC-12).
+- **Caracteres especiais:** preservar letras acentuadas e caracteres significativos como espaços internos, hífen e apóstrofo na busca; apresentar o nome retornado pela fonte no resultado selecionável (AC-13).
+- **Falha de API:** se geocodificação ou meteorologia retornar erro, mostrar um estado de falha distinto de “nenhum resultado”, não apresentar dados inexistentes como atuais e disponibilizar tentativa novamente (AC-10).
+- **Timeout:** se uma busca ou consulta meteorológica exceder o limite configurado, encerrar o estado de carregamento, informar a falha e oferecer tentativa novamente; não tratar timeout como lista vazia (AC-14).
+- **Geocoding sem resultados:** se o serviço de geocodificação responder com sucesso e lista vazia, informar que não foram encontrados resultados, não selecionar uma cidade e não solicitar dados meteorológicos (AC-09). Este é o comportamento observável tanto para uma cidade inexistente quanto para uma consulta sem correspondência; o app não deve inferir a causa.
+- **Resposta parcial:** exibir os campos válidos recebidos, indicar como indisponíveis os campos esperados que faltam, não substituí-los por valores inventados e manter visíveis as seções independentes que tenham dados válidos (AC-15).
 - A busca retorna cidades homônimas ou locais geograficamente próximos com nomes semelhantes.
-- A busca está vazia, contém apenas espaços ou não pode ser processada.
-- O serviço de geocodificação ou meteorologia está indisponível, retorna erro ou excede o tempo limite.
-- A fonte não retorna dados atuais ou não possui previsão para o local selecionado.
-- Os dados retornados estão incompletos, atrasados ou não podem ser associados com segurança à cidade escolhida.
+- Os dados retornados estão atrasados ou não podem ser associados com segurança à cidade escolhida.
 - A data da previsão muda conforme o fuso horário local, especialmente perto da meia-noite ou da mudança de data no dispositivo do usuário.
 - O usuário alterna unidades durante o carregamento ou após uma atualização dos dados.
 - A preferência de unidade não foi definida ou não pode ser restaurada; o comportamento persistente ainda é uma pergunta aberta.
@@ -150,7 +169,7 @@ Não fazem parte da primeira versão conforme as decisões disponíveis; qualque
 1. Quem são os usuários prioritários e quais situações de uso devem orientar as prioridades? Quais métricas de negócio ou sucesso serão usadas?
 2. Alertas de tempo severo fazem parte do produto futuro ou a aplicação se limita a condições atuais e previsão regular?
 3. Quais países e regiões a busca deve cobrir? Como será a interação de busca (texto livre, sugestões enquanto digita ou outra) e qual será o fallback quando a fonte não retornar região administrativa para um resultado?
-4. Qual deve ser o comportamento após busca sem resultado, falha ou timeout, além da mensagem de estado? Deve haver ação de tentar novamente?
+4. Quais textos devem ser usados nos estados de busca sem resultado, falha de API e timeout, além das mensagens de orientação e da ação de tentar novamente?
 5. A seleção será exclusivamente manual ou haverá cidade padrão, geolocalização, histórico ou favoritos?
 6. Quais campos meteorológicos adicionais, além de temperatura e condição, devem aparecer no clima atual e na previsão? A previsão deve incluir intervalos horários?
 7. Como datas e horários locais devem ser formatados em pt-BR? Qual fallback usar se não houver fuso horário disponível para a cidade?
