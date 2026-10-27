@@ -51,132 +51,231 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 - **Arquivos prováveis:** `src/types/weather.ts`, `src/types/openMeteo.ts`.
 - **Tipo:** Data.
 
-### T-06 — Implementar mapeadores e conversão puros
+### T-06 — Mapear códigos WMO
 
-- **Descrição:** normalizar DTOs para o domínio, mapear códigos WMO e derivar valores de temperatura para a unidade selecionada.
-- **Critérios de aceite:** dados são normalizados em Celsius; campos ausentes viram `null`; códigos desconhecidos usam o fallback aprovado; conversão e arredondamento atendem AC-11/12 sem mutar os dados de origem.
-- **Rastreabilidade:** FR-02 a FR-04, AC-06, AC-07, AC-10 a AC-12, AC-15.
+- **Descrição:** implementar uma função pura para converter códigos de condição aprovados em rótulos pt-BR.
+- **Critérios de aceite:** códigos aprovados retornam os rótulos definidos em T-02; código desconhecido usa o fallback aprovado sem lançar erro.
+- **Rastreabilidade:** FR-02, FR-03, AC-06, AC-07.
+- **Dependências:** T-02, T-05.
+- **Arquivos prováveis:** `src/lib/weatherCode.ts`.
+- **Tipo:** Data.
+
+### T-07 — Mapear payloads para o domínio
+
+- **Descrição:** mapear payloads válidos de geocoding e forecast para `City` e `WeatherData`, preservando coordenadas, datas locais e ausências.
+- **Critérios de aceite:** cidade e dados meteorológicos correspondem ao payload; campos opcionais ausentes não são inventados; campos meteorológicos ausentes são `null`; payload malformado não é aceito como válido.
+- **Rastreabilidade:** FR-01 a FR-03, AC-03, AC-05 a AC-10, AC-15.
+- **Dependências:** T-05, T-06.
+- **Arquivos prováveis:** `src/lib/weatherMapper.ts`.
+- **Tipo:** Data.
+
+### T-08 — Implementar conversão de temperatura
+
+- **Descrição:** criar função pura para derivar valores de apresentação a partir de Celsius e da unidade selecionada.
+- **Critérios de aceite:** `null` permanece indisponível; Fahrenheit aplica fórmula e arredondamento de AC-12; entrada em Celsius não é mutada.
+- **Rastreabilidade:** FR-04, AC-11, AC-12.
 - **Dependências:** T-05.
-- **Arquivos prováveis:** `src/lib/weatherMapper.ts`, `src/lib/weatherCode.ts`, `src/lib/temperature.ts`.
+- **Arquivos prováveis:** `src/lib/temperature.ts`.
 - **Tipo:** Data.
 
-### T-07 — Implementar serviço de geocoding
+### T-09 — Implementar serviço de geocoding
 
-- **Descrição:** encapsular a chamada de busca à Open-Meteo, validar a resposta e retornar `City[]` normalizado.
-- **Critérios de aceite:** usa os parâmetros aprovados no plano; lista vazia válida é distinguível de erro; erro de rede, HTTP, API, timeout e payload inválido retornam categorias tipadas; timeout é 10 s e não há retry automático.
+- **Descrição:** encapsular a busca Open-Meteo e validar sua resposta antes de retornar cidades normalizadas.
+- **Critérios de aceite:** usa os parâmetros aprovados; resposta válida sem resultados é distinta de erro; rede, HTTP, API, timeout e payload inválido retornam erros tipados; timeout é 10 s, sem retry automático.
 - **Rastreabilidade:** FR-01, FR-05, AC-01 a AC-04, AC-08, AC-09, AC-13.
-- **Dependências:** T-03, T-05, T-06.
-- **Arquivos prováveis:** `src/services/openMeteoService.ts`, `src/types/openMeteo.ts`.
+- **Dependências:** T-03, T-05, T-07.
+- **Arquivos prováveis:** `src/services/openMeteoService.ts`.
 - **Tipo:** Data.
 
-### T-08 — Implementar serviço de forecast
+### T-10 — Implementar serviço de forecast
 
 - **Descrição:** consultar clima atual e previsão diária de cinco dias para as coordenadas da cidade selecionada.
 - **Critérios de aceite:** request usa Celsius, timezone local e o campo diário aprovado em T-01; resposta mapeia para `WeatherData`; campos parciais e erros seguem os contratos; resposta inválida não vira sucesso.
 - **Rastreabilidade:** FR-02, FR-03, FR-05, AC-05 a AC-10, AC-13, AC-15.
-- **Dependências:** T-01, T-02, T-03, T-05, T-06.
-- **Arquivos prováveis:** `src/services/openMeteoService.ts`, `src/types/openMeteo.ts`.
+- **Dependências:** T-01 a T-07, T-09.
+- **Arquivos prováveis:** `src/services/openMeteoService.ts`.
 - **Tipo:** Data.
 
-## Entrega 3 — Aplicação e interface
+## Entrega 3 — Interface e orquestração
 
-### T-09 — Montar composição principal da aplicação
+### T-11 — Criar estilos globais e base responsiva
 
-- **Descrição:** criar a composição da tela com o hook e os componentes, preservando a estrutura React/Vite e o tema do projeto.
-- **Critérios de aceite:** a aplicação inicia pelo Vite; componentes recebem estado via props e callbacks; não há chamadas de serviço diretamente na UI.
-- **Rastreabilidade:** NFR-01, NFR-02; arquitetura em camadas do plano.
-- **Dependências:** T-05.
-- **Arquivos prováveis:** `src/App.tsx`, `src/main.tsx`, `src/index.css`.
+- **Descrição:** preparar estilos globais Tailwind alinhados ao tema dark glassmorphism e aos viewports definidos.
+- **Critérios de aceite:** estilos globais podem ser importados pela aplicação; conteúdo não exige rolagem horizontal a 320 px; foco visível permanece legível no tema.
+- **Rastreabilidade:** NFR-01, NFR-02.
+- **Dependências:** nenhuma.
+- **Arquivos prováveis:** `src/index.css`.
 - **Tipo:** UI.
 
-### T-10 — Orquestrar estado e ações no hook
+### T-12 — Orquestrar estado e ações no hook
 
 - **Descrição:** implementar busca, seleção, consulta, retry e unidade em `useWeatherApp` com estados independentes de busca e clima.
 - **Critérios de aceite:** estados `idle/loading/success/error` existem para operações; `empty` é exclusivo da busca; nova seleção limpa clima anterior e respostas obsoletas não sobrescrevem a cidade atual; alterar unidade não chama serviços.
 - **Rastreabilidade:** FR-01 a FR-05, AC-01, AC-04, AC-05, AC-08, AC-11 a AC-13.
-- **Dependências:** T-06, T-07, T-08.
-- **Arquivos prováveis:** `src/hooks/useWeatherApp.ts`, `src/types/weather.ts`.
+- **Dependências:** T-05 a T-10.
+- **Arquivos prováveis:** `src/hooks/useWeatherApp.ts`.
 - **Tipo:** Data.
 
-### T-11 — Criar interface de busca e seleção
+### T-13 — Criar componente de busca
 
 - **Descrição:** implementar campo de busca, lista de cidades, seleção e estados vazio/erro/carregamento.
 - **Critérios de aceite:** input vazio não envia request; resultados mostram os campos geográficos disponíveis; seleção dispara o callback do resultado correto; vazio, erro e loading são distinguíveis e acessíveis.
 - **Rastreabilidade:** FR-01, FR-05, AC-01 a AC-04, AC-08, AC-09, AC-13, AC-14, NFR-01/02.
-- **Dependências:** T-09, T-10.
+- **Dependências:** T-12.
 - **Arquivos prováveis:** `src/components/CitySearch.tsx`.
 - **Tipo:** UI.
 
-### T-12 — Criar painéis de clima atual e previsão
+### T-14 — Criar componente de clima atual
 
-- **Descrição:** exibir cidade selecionada, condições atuais e cinco datas da previsão, incluindo estados parciais e indisponíveis.
-- **Critérios de aceite:** valores exibidos pertencem à cidade selecionada; datas seguem o timezone retornado; campos `null` mostram indisponibilidade sem reaproveitar dados antigos.
-- **Rastreabilidade:** FR-02, FR-03, AC-05 a AC-10, AC-14, AC-15, NFR-01/02/04.
-- **Dependências:** T-09, T-10.
-- **Arquivos prováveis:** `src/components/CurrentWeather.tsx`, `src/components/Forecast.tsx`.
+- **Descrição:** apresentar local selecionado, temperatura e condição atuais.
+- **Critérios de aceite:** exibe dados apenas do local selecionado; campos `null` aparecem como indisponíveis; unidade e textos seguem AC-06/10/14.
+- **Rastreabilidade:** FR-02, AC-05, AC-06, AC-08, AC-10, AC-14, NFR-01/02/04.
+- **Dependências:** T-08, T-12.
+- **Arquivos prováveis:** `src/components/CurrentWeather.tsx`.
 - **Tipo:** UI.
 
-### T-13 — Integrar alternância de temperatura
+### T-15 — Criar componente de previsão
 
-- **Descrição:** conectar o controle de unidade à apresentação derivada de Celsius/Fahrenheit.
-- **Critérios de aceite:** Celsius é inicial; a troca atualiza todas as temperaturas visíveis sem nova chamada à API; rótulos °C/°F e arredondamento atendem AC-11/12; unidade dura somente até fechar ou recarregar a página.
-- **Rastreabilidade:** FR-04, AC-11, AC-12, NFR-04.
-- **Dependências:** T-06, T-10, T-12.
-- **Arquivos prováveis:** `src/components/UnitToggle.tsx`, `src/components/CurrentWeather.tsx`, `src/components/Forecast.tsx`.
+- **Descrição:** apresentar a previsão diária em grupos por data local.
+- **Critérios de aceite:** renderiza as cinco datas em ordem; exibe temperatura/condição ou indisponibilidade por campo; não usa o timezone do dispositivo.
+- **Rastreabilidade:** FR-03, AC-05, AC-07, AC-10, AC-14, AC-15, NFR-01/02/04.
+- **Dependências:** T-08, T-12.
+- **Arquivos prováveis:** `src/components/Forecast.tsx`.
+- **Tipo:** UI.
+
+### T-16 — Criar controle de unidade
+
+- **Descrição:** criar controle acessível para selecionar Celsius ou Fahrenheit.
+- **Critérios de aceite:** expõe unidade selecionada e emite mudança via callback; é operável por teclado e identifica as opções; não faz chamada de dados.
+- **Rastreabilidade:** FR-04, AC-11, AC-12, NFR-01/02/04.
+- **Dependências:** T-12.
+- **Arquivos prováveis:** `src/components/UnitToggle.tsx`.
+- **Tipo:** UI.
+
+### T-17 — Compor a tela principal
+
+- **Descrição:** conectar hook e componentes por props/callbacks.
+- **Critérios de aceite:** a tela exibe estados e dados providos pelo hook; nenhum componente chama serviços diretamente; compilação passa.
+- **Rastreabilidade:** FR-01 a FR-05, AC-01 a AC-15.
+- **Dependências:** T-12 a T-16.
+- **Arquivos prováveis:** `src/App.tsx`.
+- **Tipo:** UI.
+
+### T-18 — Conectar entrada React/Vite
+
+- **Descrição:** montar a aplicação React no ponto de entrada do Vite e carregar os estilos globais.
+- **Critérios de aceite:** `pnpm dev` carrega `App` e estilos; não há erro no console ao iniciar.
+- **Rastreabilidade:** FR-01 a FR-05, NFR-01.
+- **Dependências:** T-11, T-17.
+- **Arquivos prováveis:** `src/main.tsx`.
 - **Tipo:** UI.
 
 ## Entrega 4 — Testes e validação
 
-### T-14 — Testar funções puras
+### T-19 — Testar mapeamento de payloads
 
-- **Descrição:** cobrir mapeamento, códigos WMO, datas, campos ausentes e conversão de temperatura com fixtures determinísticas.
-- **Critérios de aceite:** testes incluem `0`, `100`, negativos, `null` e limites de arredondamento; cobrem códigos conhecidos/desconhecidos e datas locais; não dependem de rede ou React.
-- **Rastreabilidade:** AC-02/03/06/07/10/11/12/15.
-- **Dependências:** T-06.
-- **Arquivos prováveis:** `tests/unit/lib/weatherMapper.test.ts`, `tests/unit/lib/weatherCode.test.ts`, `tests/unit/lib/temperature.test.ts`.
+- **Descrição:** testar conversão de respostas geocoding/forecast para contratos de domínio.
+- **Critérios de aceite:** fixtures cobrem campos completos, ausentes e estrutura inválida; datas, coordenadas e associação ao local são preservadas.
+- **Rastreabilidade:** AC-03, AC-05 a AC-10, AC-15.
+- **Dependências:** T-07.
+- **Arquivos prováveis:** `tests/unit/lib/weatherMapper.test.ts`.
 - **Tipo:** Test.
 
-### T-15 — Testar serviços com fetch mockado
+### T-20 — Testar mapeamento de códigos WMO
 
-- **Descrição:** testar geocoding e forecast usando respostas controladas, sem chamar a API real.
-- **Critérios de aceite:** cobrir URL/parâmetros, sucesso, lista vazia, parcial, erro de rede, HTTP/API, payload inválido, timeout e cancelamento; estados retornados correspondem ao contrato.
-- **Rastreabilidade:** AC-04/08/09/10/13/15.
-- **Dependências:** T-07, T-08.
-- **Arquivos prováveis:** `tests/unit/services/openMeteoService.test.ts`.
+- **Descrição:** verificar os rótulos e fallback de condições meteorológicas.
+- **Critérios de aceite:** cada código aprovado e pelo menos um código desconhecido têm resultado esperado; teste não usa rede.
+- **Rastreabilidade:** AC-06, AC-07.
+- **Dependências:** T-02, T-06.
+- **Arquivos prováveis:** `tests/unit/lib/weatherCode.test.ts`.
 - **Tipo:** Test.
 
-### T-16 — Testar transições do hook
+### T-21 — Testar conversão de temperatura
+
+- **Descrição:** validar conversão pura e arredondamento da temperatura exibida.
+- **Critérios de aceite:** cobre `0`, `100`, negativos, `null` e empates de arredondamento conforme AC-12.
+- **Rastreabilidade:** AC-11, AC-12.
+- **Dependências:** T-08.
+- **Arquivos prováveis:** `tests/unit/lib/temperature.test.ts`.
+- **Tipo:** Test.
+
+### T-22 — Testar serviço de geocoding
+
+- **Descrição:** testar geocoding com `fetch` mockado.
+- **Critérios de aceite:** cobre URL/parâmetros, sucesso, lista vazia, rede, HTTP/API, timeout, cancelamento e payload inválido; não chama API externa.
+- **Rastreabilidade:** AC-01 a AC-04, AC-08, AC-09, AC-13.
+- **Dependências:** T-09.
+- **Arquivos prováveis:** `tests/unit/services/geocoding.test.ts`.
+- **Tipo:** Test.
+
+### T-23 — Testar serviço de forecast
+
+- **Descrição:** testar forecast com `fetch` mockado.
+- **Critérios de aceite:** cobre parâmetros, resposta completa/parcial, erro HTTP/API/rede, timeout, cancelamento e timezone ausente; não chama API externa.
+- **Rastreabilidade:** AC-05 a AC-10, AC-13, AC-15.
+- **Dependências:** T-10.
+- **Arquivos prováveis:** `tests/unit/services/forecast.test.ts`.
+- **Tipo:** Test.
+
+### T-24 — Testar hook de estado
 
 - **Descrição:** testar orquestração com serviços mockados e respostas concorrentes controladas.
-- **Critérios de aceite:** cobrir loading/success/empty/error, seleção, retry com parâmetros preservados, descarte de resposta obsoleta e troca de unidade sem request novo.
-- **Rastreabilidade:** AC-04/05/08/11/12/13.
-- **Dependências:** T-10.
+- **Critérios de aceite:** cobre idle/loading/success/empty/error, seleção, retry, descarte de resposta obsoleta e troca de unidade sem request novo.
+- **Rastreabilidade:** AC-04, AC-05, AC-08, AC-11 a AC-13.
+- **Dependências:** T-12.
 - **Arquivos prováveis:** `tests/unit/hooks/useWeatherApp.test.ts`.
 - **Tipo:** Test.
 
-### T-17 — Testar componentes e acessibilidade
+### T-25 — Testar componente de busca
 
-- **Descrição:** validar estados visuais e interação dos componentes com props e callbacks controlados.
-- **Critérios de aceite:** busca cobre idle/loading/success/empty/error; clima cobre idle/loading/success/error, inclusive parcial; controles funcionam por teclado, têm foco visível e mensagens acessíveis.
-- **Rastreabilidade:** AC-01/04/06/07/10/13/14, NFR-02.
-- **Dependências:** T-11, T-12, T-13.
-- **Arquivos prováveis:** `tests/unit/components/CitySearch.test.tsx`, `tests/unit/components/CurrentWeather.test.tsx`, `tests/unit/components/Forecast.test.tsx`, `tests/unit/components/UnitToggle.test.tsx`.
+- **Descrição:** validar estados, submissão e seleção por interação do usuário.
+- **Critérios de aceite:** cobre input vazio, loading, success, empty e error; seleção e retry funcionam; teclado, foco e nomes acessíveis passam.
+- **Rastreabilidade:** AC-01 a AC-04, AC-08, AC-09, AC-13, AC-14, NFR-02.
+- **Dependências:** T-13.
+- **Arquivos prováveis:** `tests/unit/components/CitySearch.test.tsx`.
 - **Tipo:** Test.
 
-### T-18 — Validar fluxos E2E e viewport mobile
+### T-26 — Testar componente de clima atual
 
-- **Descrição:** cobrir o fluxo completo com Playwright e APIs interceptadas, incluindo apresentação em telas pequenas.
-- **Critérios de aceite:** busca → seleção → clima/previsão e alternância de unidade passam; vazio, erro, retry, timeout e resposta obsoleta são testados; fluxo principal funciona a 320 px sem rolagem horizontal e também em 768/1280 px e retrato/paisagem.
+- **Descrição:** validar conteúdo, unidade e dados parciais no painel atual.
+- **Critérios de aceite:** exibe sucesso, loading/erro e campo indisponível; unidade e local correspondem às props; mensagens têm semântica acessível.
+- **Rastreabilidade:** AC-05, AC-06, AC-08, AC-10, AC-14, NFR-02.
+- **Dependências:** T-14.
+- **Arquivos prováveis:** `tests/unit/components/CurrentWeather.test.tsx`.
+- **Tipo:** Test.
+
+### T-27 — Testar componente de previsão
+
+- **Descrição:** validar datas, valores e estados indisponíveis no painel de previsão.
+- **Critérios de aceite:** verifica cinco datas ordenadas, campos parciais, fuso e unidade recebidos; erro e loading são acessíveis.
+- **Rastreabilidade:** AC-05, AC-07, AC-10, AC-14, AC-15, NFR-02.
+- **Dependências:** T-15.
+- **Arquivos prováveis:** `tests/unit/components/Forecast.test.tsx`.
+- **Tipo:** Test.
+
+### T-28 — Testar controle de unidade
+
+- **Descrição:** verificar seleção e acessibilidade do controle Celsius/Fahrenheit.
+- **Critérios de aceite:** unidade ativa é indicada; callback recebe cada seleção; teclado e foco visível funcionam.
+- **Rastreabilidade:** AC-11, AC-12, NFR-02.
+- **Dependências:** T-16.
+- **Arquivos prováveis:** `tests/unit/components/UnitToggle.test.tsx`.
+- **Tipo:** Test.
+
+### T-29 — Validar E2E e viewport mobile
+
+- **Descrição:** testar o fluxo integrado com Playwright e APIs interceptadas.
+- **Critérios de aceite:** busca → seleção → clima/previsão e troca de unidade passam; vazio, erro, retry, timeout e resposta obsoleta são testados; o fluxo principal funciona a 320 px sem rolagem horizontal e também em 768/1280 px e retrato/paisagem.
 - **Rastreabilidade:** US-01 a US-05, AC-01 a AC-15, NFR-01/02.
-- **Dependências:** T-11, T-12, T-13, T-15, T-17.
+- **Dependências:** T-17, T-18, T-22 a T-28.
 - **Arquivos prováveis:** `tests/e2e/weather-app.spec.ts`, `playwright.config.ts`.
 - **Tipo:** Test.
 
-### T-19 — Executar gates de entrega
+### T-30 — Executar gates de entrega
 
 - **Descrição:** verificar qualidade técnica e aprovações necessárias antes do go-live.
-- **Critérios de aceite:** `pnpm lint`, `pnpm build`, `pnpm test` e `pnpm test:e2e` passam; decisões de T-03/T-04 e metas NFR-01/03/06 estão registradas como aprovadas ou como bloqueios de lançamento; nenhum teste depende da Open-Meteo real.
+- **Critérios de aceite:** `pnpm lint`, `pnpm build`, `pnpm test` e `pnpm test:e2e` passam; T-03/T-04 e metas NFR-01/03/06 estão aprovadas ou registradas como bloqueios; testes não dependem da Open-Meteo real.
 - **Rastreabilidade:** NFR-01, NFR-02, NFR-03, NFR-05, NFR-06.
-- **Dependências:** T-03, T-04, T-14, T-15, T-16, T-17, T-18.
-- **Arquivos prováveis:** `package.json`, `plans/weather-app-plan.md`, documentação operacional aprovada.
+- **Dependências:** T-03, T-04, T-19 a T-29.
+- **Arquivos prováveis:** `plans/weather-app-plan.md`.
 - **Tipo:** Infra.
