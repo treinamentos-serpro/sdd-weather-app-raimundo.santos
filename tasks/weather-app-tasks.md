@@ -2,6 +2,18 @@
 
 Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T-04 são gates: registram decisões ainda pendentes no plano/spec e não autorizam a equipe a presumir uma resposta.
 
+## Matriz de rastreabilidade funcional
+
+| Requisito da spec | Tarefas de implementação | Tarefas de teste | Cobertura |
+| --- | --- | --- | --- |
+| FR-01 — Buscar e selecionar cidade | T-05, T-07, T-09, T-11, T-12, T-17, T-18 | T-19, T-22, T-24, T-25, T-29 | Coberto: busca, mapeamento, seleção, UI e fluxo E2E. |
+| FR-02 — Consultar clima atual | T-05, T-06, T-07, T-10, T-11, T-13, T-17, T-18 | T-19, T-20, T-23, T-24, T-26, T-29 | Coberto: dados atuais, condição pt-BR, unidade, estados e integração. |
+| FR-03 — Consultar previsão de cinco dias | T-01 (gate), T-05, T-06, T-07, T-10, T-11, T-14, T-17, T-18 | T-19, T-20, T-23, T-24, T-27, T-29 | Tarefas previstas; T-01 bloqueia a definição de máxima/mínima/média antes de fechar o campo diário. |
+| FR-04 — Alternar Celsius/Fahrenheit | T-05, T-08, T-11, T-15, T-17, T-18 | T-21, T-24, T-28, T-29 | Coberto: conversão pura, controle, derivação sem novo request e fluxo E2E. |
+| FR-05 — Comunicar estados da consulta | T-09, T-10, T-11, T-12, T-13, T-14, T-17, T-18 | T-22, T-23, T-24, T-25, T-26, T-27, T-29 | Coberto: loading, vazio na busca, erro, timeout e retry manual. |
+
+**Requisitos sem tarefa correspondente:** nenhum FR da spec está sem tarefa de implementação ou teste. FR-03 permanece bloqueado pela decisão registrada em T-01; isso é uma dependência pendente, não uma lacuna de rastreabilidade.
+
 ## Entrega 1 — Contratos e gates
 
 ### T-01 — Definir temperatura da previsão diária
