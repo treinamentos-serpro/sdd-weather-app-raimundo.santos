@@ -26,8 +26,8 @@ As probabilidades são estimativas iniciais. A fonte de dados já foi escolhida,
 | Indisponibilidade, limite de requisições ou mudança na API meteorológica | Média | Alto: clima atual e previsão podem deixar de carregar. | Confirmar cobertura, limites, licença e condições de uso da Open-Meteo; tratar falhas e timeouts; monitorar erros e definir resposta degradada ou alternativa. |
 | Dados incompletos, atrasados ou inconsistentes para a cidade escolhida | Média | Alto: o usuário pode tomar decisões com informação incorreta ou desatualizada. | Definir requisitos de cobertura e atualização; validar e indicar horário da última atualização; comunicar ausência de dados em vez de apresentar valores como atuais. |
 | Cidades homônimas ou resultados geográficos imprecisos | Alta | Médio: previsão de um local diferente do pretendido. | Exibir contexto suficiente (estado/região e país), permitir confirmação explícita e validar coordenadas retornadas pela fonte. |
-| Escopo indefinido de “cinco dias” e dos campos da previsão | Alta | Alto: retrabalho de produto e interface, além de divergência com a expectativa do usuário. | Decidir se o período inclui hoje, granularidade e campos antes de fechar a especificação e validar a interpretação com usuários ou stakeholders. |
-| Conversão ou rotulagem incorreta de Celsius/Fahrenheit | Média | Alto: temperaturas podem ser interpretadas incorretamente. | Definir unidade padrão e persistência; centralizar conversões; testar valores de referência, arredondamento e consistência em todas as telas. |
+| Granularidade e campos da previsão ainda indefinidos | Alta | Alto: retrabalho de produto e interface, além de divergência com a expectativa do usuário. | Definir se a previsão será diária ou horária e quais campos serão exibidos; a janela já foi fixada como hoje mais quatro dias. |
+| Conversão ou rotulagem incorreta de Celsius/Fahrenheit | Média | Alto: temperaturas podem ser interpretadas incorretamente. | Centralizar conversões e rótulos; testar valores de referência, arredondamento e consistência em todas as telas; definir como a preferência será mantida. |
 | Experiência incompatível com alguns dispositivos, navegadores ou tecnologias assistivas | Média | Alto: parte dos usuários pode não conseguir consultar ou operar o app. | Definir matriz de suporte e critérios responsivos/acessíveis; testar teclado, leitor de tela e viewports representativos antes do lançamento. |
 | Ausência de metas de performance e disponibilidade | Média | Alto: lentidão ou interrupções podem prejudicar o uso sem serem detectadas como falhas contra um objetivo acordado. | Estabelecer metas mensuráveis; medir busca e carregamento ponta a ponta; monitorar disponibilidade e definir estados de erro, retry e eventual cache com validade explícita. |
 | Público prioritário e critério de sucesso não definidos | Alta | Alto: o produto pode ser entregue sem resolver a necessidade principal ou sem forma de avaliar o resultado. | Identificar usuários e tarefas prioritárias; acordar métricas de sucesso e validar protótipos/fluxos antes de ampliar o escopo. |
@@ -106,10 +106,10 @@ Como o briefing não descreve usuários reais, estas personas são hipóteses pa
 
 - **Objetivo principal:** consultar a previsão de cinco dias de uma cidade para planejar atividades ou deslocamentos.
 - **Contexto de uso:** principalmente desktop para planejar; mobile para revisitar a previsão fora de casa.
-- **Métrica de sucesso pessoal:** localizar a cidade pretendida e identificar a previsão dos cinco dias exibidos em uma única consulta, sem confundir o período. Definição do período ainda depende de decisão de produto.
+- **Métrica de sucesso pessoal:** localizar a cidade pretendida e identificar a previsão de hoje e dos quatro dias seguintes em uma única consulta, sem confundir as datas.
 
 ### Lúcia, que prefere Fahrenheit
 
 - **Objetivo principal:** entender as temperaturas sem fazer conversões mentais.
 - **Contexto de uso:** mobile e desktop, com preferência por Fahrenheit.
-- **Métrica de sucesso pessoal:** selecionar Fahrenheit uma vez e encontrar as temperaturas apresentadas nessa unidade em todas as áreas consultadas, sem conversão manual. Persistência da preferência ainda precisa ser definida.
+- **Métrica de sucesso pessoal:** selecionar Fahrenheit e encontrar as temperaturas apresentadas nessa unidade durante a consulta, sem conversão manual.
