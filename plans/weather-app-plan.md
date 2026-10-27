@@ -2,14 +2,26 @@
 
 ## Architecture
 
-Aplicação SPA estática em React, sem backend próprio. A UI coordena busca, seleção, consulta meteorológica e unidade; uma camada de serviço encapsula Open-Meteo e converte respostas externas para tipos de domínio. Um módulo puro converte temperaturas para apresentação.
+Aplicação SPA estática em React, sem backend próprio, organizada em quatro camadas. Dependências seguem uma direção única: apresentação → orquestração → acesso a dados; as funções puras e os tipos são dependências sem efeitos colaterais.
 
 ```text
-React UI
-  └── estado da tela (busca, local selecionado, clima, unidade)
-       ├── Geocoding Service ── Open-Meteo Geocoding API
-       └── Weather Service ──── Open-Meteo Forecast API
+App / components
+  ↓ props e callbacks
+hooks (estado e casos de uso)
+  ↓ chamadas tipadas
+services (HTTP, timeout e validação de payload)
+  ↓
+Open-Meteo APIs
+
+hooks / services ──→ lib (mapeadores e funções puras)
+todos os módulos ───→ types (contratos sem comportamento)
 ```
+
+- **`components/`:** renderiza conteúdo e controles a partir de props, emite callbacks de intenção; não chama APIs nem mantém regras de domínio.
+- **`hooks/`:** orquestra busca, seleção, carregamento, retry e unidade; coordena serviços e expõe estado/ações à UI.
+- **`services/`:** executa `fetch`, timeout e validação estrutural; traduz falhas de transporte para erros tipados, sem importar React.
+- **`lib/`:** mapeia DTOs para domínio e calcula unidades/descrições com funções determinísticas, sem rede, estado ou efeitos colaterais.
+- **`types/`:** define os contratos de domínio e os DTOs mínimos do provedor; não contém lógica.
 
 Ao selecionar outra cidade, invalidar solicitações meteorológicas anteriores e limpar os dados exibidos até a resposta da nova seleção. Sem cache, persistência de usuário ou retry automático na primeira versão (AC-04, AC-05, AC-08, AC-13; NFR-05).
 
@@ -31,26 +43,33 @@ Não adicionar biblioteca de estado, cliente HTTP ou cache nesta etapa: `fetch`,
 
 ```text
 src/
+  App.tsx                   # compõe useWeatherApp e componentes de tela
   components/
-    CitySearch.tsx        # entrada, resultados, estados de busca
-    CurrentWeather.tsx    # clima atual e estado da seção
-    Forecast.tsx          # cinco dias e estado da seção
-    UnitToggle.tsx        # Celsius/Fahrenheit
+    CitySearch.tsx          # entrada, resultados e estados de busca
+    CurrentWeather.tsx      # clima atual e estado da seção
+    Forecast.tsx            # cinco dias e estado da seção
+    UnitToggle.tsx          # Celsius/Fahrenheit
   hooks/
-    useWeatherApp.ts      # estado e ações da tela
+    useWeatherApp.ts        # estado e ações da tela
   services/
-    openMeteoService.ts   # chamadas HTTP e validação de respostas
-    weatherMapper.ts      # conversão de payload externo para domínio
+    openMeteoService.ts     # chamadas HTTP, timeout e validação de payload
   types/
-    weather.ts            # contratos de cidade, clima, previsão e estado
+    weather.ts              # contratos de domínio
+    openMeteo.ts            # DTOs mínimos de geocoding e forecast
   lib/
-    temperature.ts        # conversão e arredondamento de temperatura
+    weatherMapper.ts        # mapeadores puros de DTO para domínio
+    weatherCode.ts          # códigos WMO para rótulos pt-BR
+    temperature.ts          # conversão e arredondamento de temperatura
 tests/
-  unit/                   # Vitest e Testing Library
-  e2e/                    # Playwright
+  unit/
+    lib/                    # funções puras: entradas, saídas e limites
+    services/               # transporte, timeout e payloads simulados
+    hooks/                  # transições de estado e concorrência
+    components/             # renderização e interação acessível
+  e2e/                      # Playwright com rotas de API interceptadas
 ```
 
-Responsabilidades seguem a convenção do projeto: UI em `components/`, dados em `services/`, lógica reutilizável em `hooks/`, tipos compartilhados em `types/` e funções puras em `lib/`.
+Cada camada pode importar `types/`; `hooks/` pode importar `services/` e `lib/`; `services/` pode importar `lib/`; `components/` recebe props e não importa `services/`. Esse limite evita chamadas de rede acopladas à renderização e permite substituir serviços por mocks nos testes.
 
 ## Data Model
 
@@ -219,8 +238,10 @@ Busca e clima têm estados independentes. Retry é ação explícita e repete os
 
 ## Testing Strategy
 
-- **Vitest — unitários:** testar trim de busca e vazio (AC-01/02), mapeamento de geocoding e identidade de cidade (AC-03/05), mapping de códigos para pt-BR, payloads completos/parciais/inválidos (AC-06/08/10), cinco datas locais/fuso ausente (AC-07/15) e conversão/arredondamento nos valores de referência (AC-11/12).
-- **Testing Library — componentes:** testar estados idle/loading/success/empty/error, mensagens acessíveis e retry sem chamadas automáticas; testar teclado/foco para controles (AC-01, AC-04, AC-08/09, AC-13; NFR-02).
+- **Vitest — `lib/`:** testar mapeamento de DTO, códigos WMO, datas locais e conversão/arredondamento com entradas e saídas fixas; sem mocks de rede, React ou relógio quando não necessários (AC-02/03/06/07/10/11/12/15).
+- **Vitest — `services/`:** substituir `fetch` por respostas controladas para validar URL/parâmetros, status HTTP, payload inválido, timeout e cancelamento; os testes não acessam a Open-Meteo real (AC-08/09/13).
+- **Vitest — `hooks/`:** substituir serviços por funções mockadas e verificar transições loading/success/empty/error, retry, unidade e descarte de resposta obsoleta (AC-04/05/08/11/13).
+- **Testing Library — `components/`:** renderizar componentes com props/handlers controlados e validar conteúdo, mensagens, interação por teclado e semântica acessível, sem depender de APIs ou estado global (AC-01, AC-04, AC-06/07, AC-13/14; NFR-02).
 - **Playwright — E2E:** cobrir busca → seleção → clima e previsão, alternância de unidade, busca vazia/sem resultados, falha e timeout com APIs interceptadas e fixtures determinísticas (US-01 a US-05; AC-01 a AC-15).
 - **Viewports:** validar os fluxos essenciais em 320, 768 e 1280 px e retrato/paisagem (NFR-01); manter Chromium desktop e projeto mobile já configurados como base.
 - **Rede:** nenhum teste automatizado depende de disponibilidade real da Open-Meteo. Manter fixtures de contrato derivadas de respostas documentadas e um smoke check externo separado apenas se o pipeline permitir acesso à rede.
