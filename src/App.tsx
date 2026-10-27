@@ -84,6 +84,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-night-900 text-white">
+      <a
+        href="#main-content"
+        className="sr-only rounded-sm bg-night-900 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+      >
+        Pular para o conteúdo
+      </a>
       <header className="border-b border-white/10 bg-night-900/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -114,7 +120,19 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      {(content.status === 'empty' || content.status === 'success') && (
+        <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {content.status === 'empty'
+            ? 'Nenhuma cidade encontrada. Confira o nome e tente buscar novamente.'
+            : `Clima carregado para ${content.data.city.name}.`}
+        </p>
+      )}
+
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+      >
         {content.status === 'idle' && (
           <section className="rounded-lg border border-white/10 bg-white/5 px-6 py-12 text-center shadow-glass backdrop-blur-md sm:py-16">
             <p className="text-sm font-medium uppercase text-accent-400">Weather</p>
@@ -145,9 +163,9 @@ export default function App() {
             <CurrentWeather city={content.data.city} current={content.data.current} unit={unit} />
             <section aria-labelledby="forecast-heading" className="space-y-4">
               <div className="flex items-end justify-between gap-4">
-                <h1 id="forecast-heading" className="text-xl font-semibold text-white sm:text-2xl">
+                <h2 id="forecast-heading" className="text-xl font-semibold text-white sm:text-2xl">
                   Próximos dias
-                </h1>
+                </h2>
                 <p className="text-xs text-white/50">Dados de demonstração</p>
               </div>
               <ForecastList days={content.data.days} unit={unit} />

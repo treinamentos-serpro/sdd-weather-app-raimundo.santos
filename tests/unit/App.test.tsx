@@ -11,12 +11,17 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', { name: 'Consulte o clima da sua cidade' }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Pular para o conteúdo' })).toHaveAttribute(
+      'href',
+      '#main-content',
+    );
 
     await user.type(screen.getByRole('searchbox', { name: 'Cidade' }), 'Lisboa');
     await user.click(screen.getByRole('button', { name: 'Buscar' }));
     expect(screen.getByRole('status')).toBeInTheDocument();
 
     expect(await screen.findByRole('heading', { name: 'Lisboa' })).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toHaveTextContent('Clima carregado para Lisboa.');
     expect(screen.getAllByRole('article')).toHaveLength(5);
 
     await user.click(screen.getByRole('button', { name: 'Fahrenheit' }));

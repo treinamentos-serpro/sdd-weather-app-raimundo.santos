@@ -38,9 +38,9 @@ export default function CurrentWeather({ city, current, unit }: CurrentWeatherPr
           </span>
           <div>
             <p className="text-sm font-medium text-white/60">Clima atual</p>
-            <h2 id="current-weather-title" className="text-2xl font-semibold text-white">
+            <h1 id="current-weather-title" className="text-2xl font-semibold text-white">
               {city.name}
-            </h2>
+            </h1>
             {locationDetails && <p className="text-sm text-white/60">{locationDetails}</p>}
             <p className="mt-1 text-sm text-white/80">
               {current.condition?.labelPtBr ?? 'Condição indisponível'}
