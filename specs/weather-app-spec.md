@@ -9,7 +9,7 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 ## Functional Requirements
 
 - **FR-01 — Buscar e selecionar cidade:** aceitar uma busca manual enviada pelo usuário, apresentar resultados identificáveis e permitir selecionar um local. Critérios: AC-01 a AC-05.
-- **FR-02 — Consultar clima atual:** para o local selecionado, exibir temperatura e condição meteorológica, com unidade e local identificados. Critérios: AC-05, AC-06, AC-08 e AC-10.
+- **FR-02 — Consultar clima atual:** para o local selecionado, exibir temperatura, condição meteorológica, umidade, velocidade do vento, precipitação e pressão, com local e unidades identificados. Critérios: AC-05, AC-06, AC-08 e AC-10.
 - **FR-03 — Consultar previsão:** exibir uma previsão diária para hoje e os quatro dias seguintes, segundo as datas locais do local selecionado. Critérios: AC-05, AC-07, AC-08, AC-10 e AC-15.
 - **FR-04 — Alternar unidade:** permitir alternar entre Celsius e Fahrenheit; usar Celsius como padrão e aplicar a seleção a todas as temperaturas visíveis. Critérios: AC-11 e AC-12.
 - **FR-05 — Comunicar estados:** indicar carregamento, ausência de resultados, falha e timeout de forma distinta; permitir tentativa manual após falha. Critérios: AC-01, AC-04, AC-08, AC-09 e AC-13.
@@ -55,9 +55,9 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
   - **When** o usuário seleciona um resultado
   - **Then** a identidade exibida do local corresponde ao resultado escolhido, dados meteorológicos anteriores são removidos durante o novo carregamento e as consultas usam as coordenadas desse resultado
 - **AC-06 (FR-02) — Clima atual:**
-  - **Given** que a consulta do local selecionado retorna temperatura e código/condição válidos
+  - **Given** que a consulta do local selecionado retorna temperatura, código/condição, umidade, velocidade do vento, precipitação e pressão válidos
   - **When** o carregamento termina
-  - **Then** a temperatura e a condição traduzida para pt-BR são exibidas junto ao local selecionado e à unidade correspondente
+  - **Then** temperatura, condição traduzida para pt-BR, umidade, velocidade do vento, precipitação e pressão são exibidas junto ao local selecionado, cada medida com sua unidade
 - **AC-07 (FR-03) — Previsão diária:**
   - **Given** que há previsão válida e fuso horário para o local selecionado
   - **When** a previsão é exibida
@@ -102,7 +102,7 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 - **NFR-01 — Responsividade:** os fluxos essenciais devem funcionar sem rolagem horizontal nas larguras de 320, 768 e 1280 px, em orientação retrato e paisagem.
 - **NFR-02 — Acessibilidade:** atender WCAG 2.2 nível AA; todos os controles devem ser operáveis por teclado, ter foco visível, nome acessível e estado de carregamento/erro anunciado por tecnologia assistiva.
 - **NFR-03 — Desempenho do cliente:** como metas iniciais, Core Web Vitals no percentil 75: LCP ≤ 2,5 s, INP ≤ 200 ms e CLS ≤ 0,1. Solicitações de dados obedecem ao timeout de 10 s de AC-09.
-- **NFR-04 — Consistência e integridade:** cada temperatura tem unidade explícita; dados meteorológicos devem permanecer associados ao local selecionado e a uma resposta válida.
+- **NFR-04 — Consistência e integridade:** cada medida tem unidade explícita; dados meteorológicos devem permanecer associados ao local selecionado e a uma resposta válida.
 - **NFR-05 — Privacidade:** sem conta, geolocalização automática ou persistência de dados no servidor. Não coletar telemetria nem armazenar termos de busca além da sessão sem aprovação de finalidade, retenção e aviso ao usuário.
 - **NFR-06 — Operação:** a Open-Meteo é dependência externa sem disponibilidade garantida pela aplicação; erros e timeouts devem ser distinguíveis de resultados vazios e monitoráveis. SLA, canal de suporte e responsável operacional precisam ser definidos antes do lançamento.
 
@@ -141,7 +141,7 @@ Personas de referência, ainda a validar: Ana (consulta o clima atual na rotina)
 - Geolocalização automática, cidade padrão, favoritos e histórico.
 - Alertas, notificações e funcionamento offline.
 - Aplicativos nativos e instalação PWA.
-- Previsão horária, campos meteorológicos além de temperatura e condição, até aprovação de escopo.
+- Previsão horária e campos meteorológicos além de temperatura, condição, umidade, velocidade do vento, precipitação e pressão.
 - Telemetria ou coleta de dados pessoais sem aprovação específica.
 
 ## Open Questions

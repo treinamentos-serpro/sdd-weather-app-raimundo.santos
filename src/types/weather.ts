@@ -19,6 +19,10 @@ export interface WeatherCondition {
 export interface CurrentWeather {
   temperatureCelsius: number | null;
   condition: WeatherCondition | null;
+  humidityPercent: number | null;
+  windSpeedKmh: number | null;
+  precipitationMm: number | null;
+  pressureHpa: number | null;
 }
 
 export interface ForecastDay {

@@ -18,6 +18,10 @@ export const mockWeatherData: WeatherData = {
       code: 2,
       labelPtBr: 'Parcialmente nublado',
     },
+    humidityPercent: 72,
+    windSpeedKmh: 12.5,
+    precipitationMm: 0.2,
+    pressureHpa: 1013.2,
   },
   days: [
     {

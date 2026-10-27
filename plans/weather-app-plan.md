@@ -58,7 +58,7 @@ src/
     openMeteo.ts            # DTOs mínimos de geocoding e forecast
   lib/
     weatherMapper.ts        # mapeadores puros de DTO para domínio
-    weatherCode.ts          # códigos WMO para rótulos pt-BR
+    weatherCodes.ts         # códigos WMO para rótulos pt-BR e ícones
     temperature.ts          # conversão e arredondamento de temperatura
 tests/
   unit/
@@ -97,6 +97,10 @@ export interface WeatherCondition {
 export interface CurrentWeather {
   temperatureCelsius: number | null; // current.temperature_2m normalizada para °C
   condition: WeatherCondition | null; // current.weather_code mapeado para pt-BR
+  humidityPercent: number | null; // current.relative_humidity_2m em porcentagem
+  windSpeedKmh: number | null; // current.wind_speed_10m em km/h
+  precipitationMm: number | null; // current.precipitation em milímetros
+  pressureHpa: number | null; // current.surface_pressure em hPa
 }
 
 export interface ForecastDay {
@@ -199,7 +203,7 @@ Mapeamento para `City`: `id` vira string estável; `name`, `latitude` e `longitu
 
 **Método e URL:** `GET https://api.open-meteo.com/v1/forecast`
 
-Parâmetros: `latitude` e `longitude` da `City` selecionada; `current=temperature_2m,weather_code`; `daily=weather_code,<daily_temperature_field>`; `temperature_unit=celsius`; `timezone=auto`; `forecast_days=5`. O marcador `<daily_temperature_field>` não é literal: substituir pelo campo diário escolhido pelo produto, por exemplo `temperature_2m_max` ou `temperature_2m_min`. A spec ainda não define qual estatística apresentar, então a consulta e o mapeamento final desse campo permanecem pendentes (AC-07).
+Parâmetros: `latitude` e `longitude` da `City` selecionada; `current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m,precipitation,surface_pressure`; `daily=weather_code,<daily_temperature_field>`; `temperature_unit=celsius`; `wind_speed_unit=kmh`; `precipitation_unit=mm`; `timezone=auto`; `forecast_days=5`. O marcador `<daily_temperature_field>` não é literal: substituir pelo campo diário escolhido pelo produto, por exemplo `temperature_2m_max` ou `temperature_2m_min`. A spec ainda não define qual estatística apresentar, então a consulta e o mapeamento final desse campo permanecem pendentes (AC-07).
 
 Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustrar a forma do payload, não como escolha de produto:
 
@@ -208,12 +212,20 @@ Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustra
   "timezone": "Europe/Lisbon",
   "current_units": {
     "temperature_2m": "°C",
-    "weather_code": "wmo code"
+    "weather_code": "wmo code",
+    "relative_humidity_2m": "%",
+    "wind_speed_10m": "km/h",
+    "precipitation": "mm",
+    "surface_pressure": "hPa"
   },
   "current": {
     "time": "2026-10-27T12:15",
     "temperature_2m": 18.4,
-    "weather_code": 2
+    "weather_code": 2,
+    "relative_humidity_2m": 72,
+    "wind_speed_10m": 12.5,
+    "precipitation": 0.2,
+    "surface_pressure": 1013.2
   },
   "daily_units": {
     "time": "iso8601",
@@ -230,12 +242,12 @@ Exemplo resumido de resposta. `temperature_2m_max` é usado somente para ilustra
 
 Mapeamento para o modelo:
 
-- `current.temperature_2m` → `CurrentWeather.temperatureCelsius`; `current.weather_code` → `CurrentWeather.condition.code` e `labelPtBr` pela tabela de códigos validada.
+- `current.temperature_2m` → `CurrentWeather.temperatureCelsius`; `current.weather_code` → `CurrentWeather.condition.code` e `labelPtBr` pela tabela de códigos validada; `relative_humidity_2m`, `wind_speed_10m`, `precipitation` e `surface_pressure` → `humidityPercent`, `windSpeedKmh`, `precipitationMm` e `pressureHpa`.
 - Para cada índice `i`, `daily.time[i]` → `ForecastDay.localDate`; `daily.<daily_temperature_field>[i]` → `ForecastDay.temperatureCelsius`; `daily.weather_code[i]` → `ForecastDay.condition`.
 - `timezone` → `WeatherData.timeZone`; a `City` selecionada → `WeatherData.city`; os objetos `current` e `daily` normalizados → `WeatherData.current` e `WeatherData.days`.
 - `current_units` e `daily_units` validam que as temperaturas recebidas são °C; ausência de valor mapeia para `null`, não para zero (AC-06/10). Converter para a unidade escolhida somente na apresentação (AC-11/12).
 
-O código numérico de condição segue os códigos WMO da Open-Meteo; `labelPtBr` exige uma tabela de tradução testada. Confirmar cobertura, limites, atribuição e termos do provedor antes do go-live (AC-06/07; Risks & Trade-offs).
+O código numérico de condição segue os códigos WMO da Open-Meteo; `labelPtBr` exige uma tabela de tradução testada, e o ícone é obtido por função pura em `weatherCodes.ts`. Confirmar cobertura, limites, atribuição e termos do provedor antes do go-live (AC-06/07; Risks & Trade-offs).
 
 ## State Management
 

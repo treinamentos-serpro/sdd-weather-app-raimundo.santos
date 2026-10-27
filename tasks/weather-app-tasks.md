@@ -7,7 +7,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 | Requisito da spec | Tarefas de implementação | Tarefas de teste | Cobertura |
 | --- | --- | --- | --- |
 | FR-01 — Buscar e selecionar cidade | T-05, T-07, T-09, T-11, T-12, T-17, T-18 | T-19, T-22, T-24, T-25, T-29 | Coberto: busca, mapeamento, seleção, UI e fluxo E2E. |
-| FR-02 — Consultar clima atual | T-05, T-06, T-07, T-10, T-11, T-13, T-17, T-18 | T-19, T-20, T-23, T-24, T-26, T-29 | Coberto: dados atuais, condição pt-BR, unidade, estados e integração. |
+| FR-02 — Consultar clima atual | T-05 a T-08, T-10, T-11, T-13, T-17, T-18 | T-19 a T-21, T-23, T-24, T-26, T-29 | Coberto: temperatura, condição/ícone, quatro métricas com unidades, estados e integração. |
 | FR-03 — Consultar previsão de cinco dias | T-01 (gate), T-05, T-06, T-07, T-10, T-11, T-14, T-17, T-18 | T-19, T-20, T-23, T-24, T-27, T-29 | Tarefas previstas; T-01 bloqueia a definição de máxima/mínima/média antes de fechar o campo diário. |
 | FR-04 — Alternar Celsius/Fahrenheit | T-05, T-08, T-11, T-15, T-17, T-18 | T-21, T-24, T-28, T-29 | Coberto: conversão pura, controle, derivação sem novo request e fluxo E2E. |
 | FR-05 — Comunicar estados da consulta | T-09, T-10, T-11, T-12, T-13, T-14, T-17, T-18 | T-22, T-23, T-24, T-25, T-26, T-27, T-29 | Coberto: loading, vazio na busca, erro, timeout e retry manual. |
@@ -103,8 +103,8 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ### T-05 — Criar tipos de domínio e DTOs
 
-- **Descrição:** definir contratos TypeScript para `Unit`, `City`, `WeatherCondition`, `CurrentWeather`, `ForecastDay`, `WeatherData`, erros e payloads mínimos Open-Meteo.
-- **Critérios de aceite:** `weather.ts` exporta os contratos de domínio e `openMeteo.ts` os DTOs usados pelos dois endpoints; campos opcionais e `null` seguem o plano; `pnpm build` termina sem erro de tipo.
+- **Descrição:** definir contratos TypeScript para `Unit`, `City`, `WeatherCondition`, `CurrentWeather` (incluindo umidade, vento, precipitação e pressão), `ForecastDay`, `WeatherData`, erros e payloads Open-Meteo.
+- **Critérios de aceite:** `weather.ts` exporta os contratos de domínio com métricas em `%`, `km/h`, `mm` e `hPa`; `openMeteo.ts` modela os campos correspondentes dos endpoints; ausências aceitam `null`; TypeScript compila.
 - **Rastreabilidade:** FR-01 a FR-04, AC-03, AC-05 a AC-07, AC-10 a AC-12, AC-15.
 - **Dependências:** T-01, T-02, T-03.
 - **Arquivos prováveis:** `src/types/weather.ts`, `src/types/openMeteo.ts`.
@@ -112,11 +112,11 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ### T-06 — Mapear códigos WMO
 
-- **Descrição:** implementar uma função pura para converter códigos de condição aprovados em rótulos pt-BR.
-- **Critérios de aceite:** cada código da tabela de T-02 retorna exatamente o rótulo pt-BR aprovado; código não mapeado retorna exatamente o fallback aprovado sem lançar exceção.
+- **Descrição:** implementar funções puras para mapear códigos WMO a rótulos e ícones climáticos.
+- **Critérios de aceite:** códigos aprovados retornam os rótulos pt-BR de T-02 e o ícone esperado; códigos nulos/desconhecidos retornam o fallback aprovado sem exceção.
 - **Rastreabilidade:** FR-02, FR-03, AC-06, AC-07.
 - **Dependências:** T-02, T-05.
-- **Arquivos prováveis:** `src/lib/weatherCode.ts`.
+- **Arquivos prováveis:** `src/lib/weatherCodes.ts`.
 - **Tipo:** Data.
 
 ### T-07 — Mapear payloads para o domínio
@@ -149,7 +149,7 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-10 — Implementar serviço de forecast
 
 - **Descrição:** consultar clima atual e previsão diária de cinco dias para as coordenadas da cidade selecionada.
-- **Critérios de aceite:** request usa coordenadas selecionadas, Celsius, `timezone=auto`, `forecast_days=5`, variáveis `current` e `daily` aprovadas; fixture válida mapeia para cinco datas; campos ausentes viram `null`; erro ou estrutura inválida não retorna sucesso.
+- **Critérios de aceite:** request usa coordenadas selecionadas, Celsius, umidade, vento em km/h, precipitação em mm, pressão em hPa, `timezone=auto`, `forecast_days=5` e variáveis `daily` aprovadas; fixture válida mapeia métricas e cinco datas; campos ausentes viram `null`; resposta inválida não retorna sucesso.
 - **Rastreabilidade:** FR-02, FR-03, FR-05, AC-05 a AC-10, AC-13, AC-15.
 - **Dependências:** T-01 a T-07, T-09.
 - **Arquivos prováveis:** `src/services/openMeteoService.ts`.
@@ -179,11 +179,11 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ### T-13 — Criar componente de clima atual
 
-- **Descrição:** apresentar local selecionado, temperatura e condição atuais.
-- **Critérios de aceite:** sucesso exibe local, temperatura e condição das props; `null` exibe indisponibilidade; loading/erro não exibem dados anteriores; unidade e textos correspondem às props/AC-14.
-- **Rastreabilidade:** FR-02, AC-05, AC-06, AC-08, AC-10, AC-14, NFR-01/02/04.
+- **Descrição:** apresentar hero do clima atual com temperatura, ícone WMO, condição e métricas de umidade, vento, precipitação e pressão.
+- **Critérios de aceite:** temperatura usa `toDisplayTemperature` na unidade recebida; condição usa `getWeatherIcon`; as quatro métricas exibem valor e unidade ou indisponibilidade para `null`; local e textos correspondem às props.
+- **Rastreabilidade:** FR-02, AC-05, AC-06, AC-10, AC-14, NFR-01/02/04.
 - **Dependências:** T-08, T-10, T-11.
-- **Arquivos prováveis:** `src/components/CurrentWeather.tsx`.
+- **Arquivos prováveis:** `src/components/CurrentWeather.tsx`, `src/lib/temperature.ts`, `src/lib/weatherCodes.ts`.
 - **Tipo:** UI.
 
 ### T-14 — Criar componente de previsão
@@ -246,11 +246,11 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 
 ### T-20 — Testar mapeamento de códigos WMO
 
-- **Descrição:** verificar os rótulos e fallback de condições meteorológicas.
-- **Critérios de aceite:** teste parametrizado verifica cada código aprovado contra o rótulo T-02 e um código desconhecido contra o fallback; nenhuma chamada de rede é feita.
+- **Descrição:** verificar ícones e fallback de códigos meteorológicos.
+- **Critérios de aceite:** teste parametrizado verifica ícones de códigos conhecidos, `null` e código desconhecido; nenhuma chamada de rede é feita.
 - **Rastreabilidade:** AC-06, AC-07.
 - **Dependências:** T-02, T-06.
-- **Arquivos prováveis:** `tests/unit/lib/weatherCode.test.ts`.
+- **Arquivos prováveis:** `tests/unit/lib/weatherCodes.test.ts`.
 - **Tipo:** Test.
 
 ### T-21 — Testar conversão de temperatura
@@ -301,8 +301,8 @@ Tarefas agrupadas por entrega e ordenadas pelas dependências. Os itens T-01 a T
 ### T-26 — Testar componente de clima atual
 
 - **Descrição:** validar conteúdo, unidade e dados parciais no painel atual.
-- **Critérios de aceite:** testes renderizam separadamente `loading`, `success` e `error`; no sucesso, local, valor e unidade correspondem às props; temperatura/condição `null` mostram indisponibilidade; loading/erro têm role acessível. Não existe estado `empty` para clima.
-- **Rastreabilidade:** AC-05, AC-06, AC-08, AC-10, AC-14, NFR-02.
+- **Critérios de aceite:** teste verifica local, condição/ícone, temperatura convertida e unidades de umidade/vento/precipitação/pressão; métricas `null` indicam indisponibilidade; Fahrenheit altera o valor exibido; estados `loading`/`error` têm role acessível.
+- **Rastreabilidade:** AC-05, AC-06, AC-08, AC-10, AC-14, NFR-02/04.
 - **Dependências:** T-13.
 - **Arquivos prováveis:** `tests/unit/components/CurrentWeather.test.tsx`.
 - **Tipo:** Test.
